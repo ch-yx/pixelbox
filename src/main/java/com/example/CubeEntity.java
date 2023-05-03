@@ -1,0 +1,284 @@
+package com.example;
+
+import net.minecraft.core.Vec3i;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+import com.example.CubeEntity;
+import com.example.PixelEntity.State;
+
+public class CubeEntity extends Entity {
+    public PixelEntity[] children = new PixelEntity[com.example.ExampleMod.pixcount * com.example.ExampleMod.pixcount
+            * com.example.ExampleMod.pixcount];
+
+    public CubeEntity(EntityType<? extends Entity> entityType, Level world) {
+        super(entityType, world);
+        first_time_spawn = true;
+        has_spawn_children = false;
+        enemy = Optional.ofNullable(null);
+
+    }
+
+    private static final EntityDataAccessor<Boolean> DATA_Pushing = SynchedEntityData
+            .defineId(PixelEntity.class, EntityDataSerializers.BOOLEAN);
+
+    public boolean first_time_spawn = true;
+    public boolean has_spawn_children = false;
+    private ListTag splist;
+
+    @Override
+    protected void addAdditionalSaveData(CompoundTag compoundTag) {
+
+        compoundTag.putBoolean("first_time_spawn", first_time_spawn);
+        // compoundTag.putBoolean("has_spawn_childrens", has_spawn_children);
+        var list = new ListTag();
+        for (PixelEntity child : children) {
+            if (child != null) {
+                list.add(child.write());
+            } else {
+                list.add(new CompoundTag());
+            }
+        }
+        compoundTag.put("children", list);
+
+    }
+
+    public Optional<Entity> enemy;
+
+    @Override
+    protected void defineSynchedData() {
+        this.entityData.define(DATA_Pushing, false);
+
+    }
+
+    void setpushing(boolean bl) {
+        this.entityData.set(DATA_Pushing, bl);
+    }
+
+    public boolean getpushing() {
+        return this.entityData.get(DATA_Pushing);
+    }
+
+    @Override
+    protected void readAdditionalSaveData(CompoundTag compoundTag) {
+
+        if (compoundTag.contains("first_time_spawn", 99)) {
+            first_time_spawn = compoundTag.getBoolean("first_time_spawn");
+        }
+
+        // has_spawn_children = compoundTag.getBoolean("has_spawn_childrens");
+        if (!first_time_spawn) {
+            this.splist = compoundTag.getList("children", 10);
+        }
+
+    }
+
+    double rtri(double a, double b) {
+        return random.triangle(a, b - a);
+    }
+
+    static Vec3 defaultposVec3(int i) {
+        return new Vec3(
+                (((i % com.example.ExampleMod.pixcount) + .5) * com.example.ExampleMod.pixsize - .5),
+                (i / com.example.ExampleMod.pixcount / com.example.ExampleMod.pixcount)
+                        * com.example.ExampleMod.pixsize,
+                (i / com.example.ExampleMod.pixcount % com.example.ExampleMod.pixcount)
+                        * com.example.ExampleMod.pixsize + com.example.ExampleMod.pixsize / 2f - .5);
+
+    }
+
+    @Override
+    public void tick() {
+
+        if (this.level.isClientSide) {
+            super.tick();
+            return;
+        }
+        if (first_time_spawn) {
+            first_time_spawn = false;
+            for (int i = 0; i < children.length; i++) {
+
+                children[i] = (PixelEntity) ((Entity_getter) (EntityType.ALLAY)).PIXEL().create(level);
+
+                children[i].setPos(defaultposVec3(i).add(this.position()));
+                level.addFreshEntity(children[i]);
+                children[i].setOwner(this);
+                children[i].index = i;
+
+                children[i].setpixelcolor(0, 0, 0);
+            }
+            splist = new ListTag();
+        } else {
+            if (!has_spawn_children) {
+                this.has_spawn_children = true;
+                if ((splist == null)) {
+                    this.kill();
+                    return;
+                }
+                int i = 0;
+                for (Tag compound : splist) {
+                    if (i >= children.length) {
+                        break;
+                    }
+                    if (((CompoundTag) compound).getAllKeys().isEmpty()) {
+                        i++;
+                        continue;
+                    }
+                    children[i] = (PixelEntity) ((Entity_getter) (EntityType.ALLAY)).PIXEL().create(level);
+                    children[i].setOwner(this);
+                    children[i].index = i;
+                    i++;
+                }
+                i = 0;
+                for (Tag compound : splist) {
+                    if (i >= children.length) {
+                        break;
+                    }
+                    if (((CompoundTag) compound).getAllKeys().isEmpty()) {
+                        i++;
+                        continue;
+                    }
+
+                    children[i].init((CompoundTag) compound);
+                    level.addFreshEntity(children[i]);
+                    i++;
+                }
+                splist = new ListTag();
+            }
+        }
+        super.tick();
+        if (this.enemy.isPresent() && enemy.get().isRemoved()) {
+            this.enemy = Optional.empty();
+        }
+        if (this.enemy.isEmpty()) {
+            this.getidlechildren().forEach(p -> {
+                p.setgoing(0, new Vec3i(20, 20, 20), defaultposVec3(p.index).add(this.position()), 0, State.sleeping);
+            });
+        }
+        if ((getId() - tickCount) % 300 == 0) {
+            this.enemy.ifPresent(player -> {
+                var t_ = player.position().add(0, player.getBbHeight() / 2, 0).scale(2).subtract(position())
+                        .offsetRandom(random, 2);
+                var t = new Vec3(Mth.clamp(t_.x, player.getX() - 9, player.getX() + 9),
+                        Mth.clamp(t_.y, player.getEyeY() - 2, player.getEyeY() + 9),
+                        Mth.clamp(t_.z, player.getZ() - 9, player.getZ() + 9));
+                getidlechildren().forEach(pixelEntity -> {
+                    pixelEntity.setgoing((int) (2 * random.triangle(3, 16)), new Vec3i(16, 16, 16),
+                            t.add(random.nextBoolean() ? pixelEntity.position().subtract(position())
+                                    : defaultposVec3(pixelEntity.index)),
+                            32);
+                });
+
+                this.setPos(t);
+            });
+
+        } else {
+            this.enemy.ifPresent(player -> {
+                var ss = new AABB[] {
+                        player.getBoundingBox().inflate(0, 0, 3).move(3, 0, 0),
+                        player.getBoundingBox().inflate(0, 0, 3).move(-3, 0, 0),
+                        player.getBoundingBox().inflate(3, 0, 0).move(0, 0, 3),
+                        player.getBoundingBox().inflate(3, 0, 0).move(0, 0, -3) };
+
+                ArrayList<PixelEntity>[] sss = new ArrayList[] { new ArrayList<PixelEntity>(),
+                        new ArrayList<PixelEntity>(),
+                        new ArrayList<PixelEntity>(), new ArrayList<PixelEntity>() };
+                getidleorgoingchildren()
+                        .filter(x -> !x.getBoundingBox().intersects(ss[0]) ? true : (sss[0].add(x) && false))
+                        .filter(x -> !x.getBoundingBox().intersects(ss[1]) ? true : (sss[1].add(x) && false))
+                        .filter(x -> !x.getBoundingBox().intersects(ss[2]) ? true : (sss[2].add(x) && false))
+                        .filter(x -> !x.getBoundingBox().intersects(ss[3]) ? true : (sss[3].add(x) && false))
+                        .filter(x -> random.nextInt(500) <= 3)
+                        .forEach(pix -> {
+                            double x, y, z;
+                            var rev = random.nextFloat() < 0.33;
+                            if (random.nextBoolean()) {
+                                var b = player.getBoundingBox().inflate(0, 0, 3);
+                                if ((pix.getX() < player.getX()) ^ rev) {
+                                    x = rtri(b.minX, b.maxX) - 3;
+                                    y = rtri(b.minY, b.maxY);
+                                    z = rtri(b.minZ, b.maxZ);
+                                } else {
+                                    x = rtri(b.minX, b.maxX) + 3;
+                                    y = rtri(b.minY, b.maxY);
+                                    z = rtri(b.minZ, b.maxZ);
+                                }
+                            } else {
+                                var b = player.getBoundingBox().inflate(3, 0, 0);
+                                if ((pix.getZ() < player.getZ()) ^ rev) {
+                                    x = rtri(b.minX, b.maxX);
+                                    y = rtri(b.minY, b.maxY);
+                                    z = rtri(b.minZ, b.maxZ) - 3;
+                                } else {
+                                    x = rtri(b.minX, b.maxX);
+                                    y = rtri(b.minY, b.maxY);
+                                    z = rtri(b.minZ, b.maxZ) + 3;
+                                }
+                            }
+                            pix.setgoing(0, new Vec3i(10, 10, 10), new Vec3(x, y, z), 32);
+                        });
+                if (!(sss[0].isEmpty() || sss[1].isEmpty())) {
+                    var o1 = sss[0].get(random.nextInt(sss[0].size()));
+                    var o2 = sss[1].get(random.nextInt(sss[1].size()));
+                    var v1 = o1.position().add(0, ExampleMod.pixsize, 0);
+                    var v2 = o2.position().add(0, ExampleMod.pixsize, 0);
+                    if (player.getBoundingBox().clip(v1, v2).isPresent()) {
+                        o1.setconnecting(o2);
+                    }
+                }
+                if (!(sss[2].isEmpty() || sss[3].isEmpty())) {
+                    var o1 = sss[2].get(random.nextInt(sss[2].size()));
+                    var o2 = sss[3].get(random.nextInt(sss[3].size()));
+                    var v1 = o1.position().add(0, ExampleMod.pixsize, 0);
+                    var v2 = o2.position().add(0, ExampleMod.pixsize, 0);
+                    if (player.getBoundingBox().clip(v1, v2).isPresent()) {
+                        o1.setconnecting(o2);
+                    }
+                }
+            });
+        }
+        getlivechildren().forEach(PixelEntity::loctick);
+    }
+
+    Stream<PixelEntity> getidlechildren() {
+        return getlivechildren().filter(x -> (x.state == State.IDLE));
+    }
+
+    Stream<PixelEntity> getidleorgoingchildren() {
+        return getlivechildren().filter(x -> (x.state == State.IDLE || x.state == State.GOING));
+    }
+
+    Stream<PixelEntity> getlivechildren() {
+        return Arrays.asList(children).stream().filter(x -> (x != null));
+    }
+
+    public Long lifecount = null;
+
+    public long getlife() {
+        if (lifecount == null) {
+            lifecount = getlivechildren().count();
+        }
+        return lifecount;
+    }
+
+    @Override
+    public void kill() {
+        super.kill();
+        getlivechildren().forEach(PixelEntity::kill);
+    }
+}
