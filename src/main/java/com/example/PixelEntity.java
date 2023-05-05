@@ -11,11 +11,13 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.util.FastColor.ARGB32;
@@ -34,17 +36,17 @@ public class PixelEntity extends Entity {
 
     public CubeEntity getOwner() {
         owner = (CubeEntity) Optional.ofNullable((Entity) owner)
-                .orElseGet(() -> this.level.getEntity(this.entityData.get(DATA_Owner)));
+                .orElseGet(() -> this.level().getEntity(this.entityData.get(DATA_Owner)));
         return owner;
     }
 
     public void setOwner(CubeEntity owner) {
         this.entityData.set(DATA_Owner, owner.getId());
-        this.owner = null;
+        this.owner = owner;
     }
 
     public PixelEntity getconer() {
-        return (PixelEntity) this.level.getEntity(this.entityData.get(DATA_Coner));
+        return (PixelEntity) this.level().getEntity(this.entityData.get(DATA_Coner));
     }
 
     private Integer conerindex = null;
@@ -189,11 +191,11 @@ public class PixelEntity extends Entity {
 
     @Override
     public InteractionResult interact(Player player, InteractionHand interactionHand) {
-        if (this.level.isClientSide) {
+        if (this.level().isClientSide) {
             return InteractionResult.SUCCESS;
         }
         getOwner().enemy = Optional.ofNullable(player);
-        var list = this.level.getEntitiesOfClass(PixelEntity.class,
+        var list = this.level().getEntitiesOfClass(PixelEntity.class,
                 this.getBoundingBox().inflate(com.example.ExampleMod.pixsize * 1.4));
         for (PixelEntity mob : list) {
             if (mob.getOwner() == this.getOwner()) {
@@ -202,6 +204,20 @@ public class PixelEntity extends Entity {
 
         }
         return InteractionResult.CONSUME;
+    }
+
+    @Override
+    public boolean hurt(DamageSource damageSource, float f) {
+        if (damageSource.isIndirect() && damageSource.getEntity() != null) {
+            getOwner().enemy = Optional.of(damageSource.getEntity());
+            if (f > 0) {
+                this.kill();
+            }
+        }
+        if (damageSource.getDirectEntity() instanceof Projectile pj) {
+            pj.setOwner(this.getOwner());
+        } 
+        return false;
     }
 
     @Override
@@ -216,13 +232,13 @@ public class PixelEntity extends Entity {
     }
 
     void moveandpush(Vec3 v) {
-        if (this.level.isClientSide) {
+        if (this.level().isClientSide) {
             return;
         }
         this.setpusher(true);
         this.getOwner().setpushing(true);
         var bbox = this.getBoundingBox().inflate(0.02).expandTowards(v);
-        this.level.getEntities(this, bbox).stream()
+        this.level().getEntities(this, bbox).stream()
                 .filter(x -> !((x instanceof PixelEntity) || (x instanceof CubeEntity)))
                 .forEach(x -> {
                     x.move(MoverType.PISTON, v);
@@ -298,14 +314,11 @@ public class PixelEntity extends Entity {
 
     boolean og = false;
 
-    public boolean isOnGround() {
+    public boolean onGround() {
         return og;
     }
 
     void loctick() {
-        if (level.isClientSide()) {
-            return;
-        }
 
         switch (state) {
             case GOING:
@@ -420,12 +433,18 @@ public class PixelEntity extends Entity {
                     setpixelcolor(255, 255, 255);
                 }
 
-                if (conercountdown < 0&&((conercountdown&4)==0) && this.index < getconer().index) {
+                if (conercountdown < 0 && ((conercountdown & 4) == 0) && this.index < getconer().index) {
                     var v1 = this.position().add(0, ExampleMod.pixsize, 0);
                     var v2 = getconer().position().add(0, ExampleMod.pixsize, 0);
-                    level.getEntitiesOfClass(LivingEntity.class, new AABB(v1,v2),ent->ent.getBoundingBox().clip(v1, v2).isPresent()).forEach(x->x.hurt(level.damageSources().indirectMagic(this, this.getOwner()), 1));;
-                    
-                    
+                    level().getEntitiesOfClass(LivingEntity.class, new AABB(v1, v2),
+                            ent -> ent.getBoundingBox().clip(v1, v2).isPresent())
+                            .forEach(x -> x.hurt(level().damageSources().indirectMagic(this, this.getOwner()),
+                                    x.getHealth() / 7f));
+                    ;
+
+                }
+                if (conercountdown < -250) {
+                    cutconnecting();
                 }
                 break;
             default:

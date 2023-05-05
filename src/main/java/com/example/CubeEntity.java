@@ -85,7 +85,7 @@ public class CubeEntity extends Entity {
         if (!first_time_spawn) {
             this.splist = compoundTag.getList("children", 10);
         }
-
+        //onaddtolevel(level());
     }
 
     double rtri(double a, double b) {
@@ -105,61 +105,9 @@ public class CubeEntity extends Entity {
     @Override
     public void tick() {
 
-        if (this.level.isClientSide) {
+        if (this.level().isClientSide) {
             super.tick();
             return;
-        }
-        if (first_time_spawn) {
-            first_time_spawn = false;
-            for (int i = 0; i < children.length; i++) {
-
-                children[i] = (PixelEntity) ((Entity_getter) (EntityType.ALLAY)).PIXEL().create(level);
-
-                children[i].setPos(defaultposVec3(i).add(this.position()));
-                level.addFreshEntity(children[i]);
-                children[i].setOwner(this);
-                children[i].index = i;
-
-                children[i].setpixelcolor(0, 0, 0);
-            }
-            splist = new ListTag();
-        } else {
-            if (!has_spawn_children) {
-                this.has_spawn_children = true;
-                if ((splist == null)) {
-                    this.kill();
-                    return;
-                }
-                int i = 0;
-                for (Tag compound : splist) {
-                    if (i >= children.length) {
-                        break;
-                    }
-                    if (((CompoundTag) compound).getAllKeys().isEmpty()) {
-                        i++;
-                        continue;
-                    }
-                    children[i] = (PixelEntity) ((Entity_getter) (EntityType.ALLAY)).PIXEL().create(level);
-                    children[i].setOwner(this);
-                    children[i].index = i;
-                    i++;
-                }
-                i = 0;
-                for (Tag compound : splist) {
-                    if (i >= children.length) {
-                        break;
-                    }
-                    if (((CompoundTag) compound).getAllKeys().isEmpty()) {
-                        i++;
-                        continue;
-                    }
-
-                    children[i].init((CompoundTag) compound);
-                    level.addFreshEntity(children[i]);
-                    i++;
-                }
-                splist = new ListTag();
-            }
         }
         super.tick();
         if (this.enemy.isPresent() && enemy.get().isRemoved()) {
@@ -280,5 +228,62 @@ public class CubeEntity extends Entity {
     public void kill() {
         super.kill();
         getlivechildren().forEach(PixelEntity::kill);
+    }
+
+    public void onaddtolevel(Level level) {
+        //System.out.println(level);
+        if (first_time_spawn) {
+            first_time_spawn = false;
+            for (int i = 0; i < children.length; i++) {
+
+                children[i] = (PixelEntity) ((Entity_getter) (EntityType.ALLAY)).PIXEL().create(level);
+
+                children[i].setPos(defaultposVec3(i).add(this.position()));
+                level.addFreshEntity(children[i]);
+                children[i].setOwner(this);
+                children[i].index = i;
+
+                children[i].setpixelcolor(0, 0, 0);
+            }
+            splist = new ListTag();
+        } else {
+            if (!has_spawn_children) {
+                this.has_spawn_children = true;
+                if ((splist == null)) {
+                    this.kill();
+                    return;
+                }
+                int i = 0;
+                for (Tag compound : splist) {
+                    if (i >= children.length) {
+                        break;
+                    }
+                    if (((CompoundTag) compound).getAllKeys().isEmpty()) {
+                        i++;
+                        continue;
+                    }
+                    children[i] = (PixelEntity) ((Entity_getter) (EntityType.ALLAY)).PIXEL().create(level);
+                    children[i].setOwner(this);
+                    children[i].index = i;
+                    i++;
+                }
+                i = 0;
+                for (Tag compound : splist) {
+                    if (i >= children.length) {
+                        break;
+                    }
+                    if (((CompoundTag) compound).getAllKeys().isEmpty()) {
+                        i++;
+                        continue;
+                    }
+
+                    children[i].init((CompoundTag) compound);
+                    level.addFreshEntity(children[i]);
+                    i++;
+                }
+                splist = new ListTag();
+            }
+        }
+        
     }
 }
