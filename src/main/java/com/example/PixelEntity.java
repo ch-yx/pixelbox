@@ -208,7 +208,7 @@ public class PixelEntity extends Entity {
 
     @Override
     public boolean hurt(DamageSource damageSource, float f) {
-        if (damageSource.isIndirect() && damageSource.getEntity() != null) {
+        if (damageSource.isIndirect() && damageSource.getEntity() != null && damageSource.getEntity() != getOwner()) {
             getOwner().enemy = Optional.of(damageSource.getEntity());
             if (f > 0) {
                 this.kill();
@@ -216,7 +216,7 @@ public class PixelEntity extends Entity {
         }
         if (damageSource.getDirectEntity() instanceof Projectile pj) {
             pj.setOwner(this.getOwner());
-        } 
+        }
         return false;
     }
 
@@ -310,6 +310,7 @@ public class PixelEntity extends Entity {
     void cutconnecting() {
         this.state = State.IDLE;
         this.setconer(null);
+        this.setpixelcolor(0, 0, 0);
     }
 
     boolean og = false;
@@ -437,9 +438,12 @@ public class PixelEntity extends Entity {
                     var v1 = this.position().add(0, ExampleMod.pixsize, 0);
                     var v2 = getconer().position().add(0, ExampleMod.pixsize, 0);
                     level().getEntitiesOfClass(LivingEntity.class, new AABB(v1, v2),
-                            ent -> ent.getBoundingBox().clip(v1, v2).isPresent())
-                            .forEach(x -> x.hurt(level().damageSources().indirectMagic(this, this.getOwner()),
-                                    x.getHealth() / 7f));
+                            ent -> ent != getOwner() && ent.getBoundingBox().clip(v1, v2).isPresent())
+                            .forEach(x -> {
+                                if (x.hurt(level().damageSources().indirectMagic(this, this.getOwner()),
+                                        x.getHealth() / 7f))
+                                    doEnchantDamageEffects(getOwner(), x);
+                            });
                     ;
 
                 }

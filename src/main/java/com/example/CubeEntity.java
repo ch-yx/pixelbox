@@ -8,8 +8,14 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.util.Mth;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -22,11 +28,11 @@ import java.util.stream.Stream;
 import com.example.CubeEntity;
 import com.example.PixelEntity.State;
 
-public class CubeEntity extends Entity {
+public class CubeEntity extends LivingEntity {
     public PixelEntity[] children = new PixelEntity[com.example.ExampleMod.pixcount * com.example.ExampleMod.pixcount
             * com.example.ExampleMod.pixcount];
 
-    public CubeEntity(EntityType<? extends Entity> entityType, Level world) {
+    public CubeEntity(EntityType<? extends LivingEntity> entityType, Level world) {
         super(entityType, world);
         first_time_spawn = true;
         has_spawn_children = false;
@@ -35,14 +41,14 @@ public class CubeEntity extends Entity {
     }
 
     private static final EntityDataAccessor<Boolean> DATA_Pushing = SynchedEntityData
-            .defineId(PixelEntity.class, EntityDataSerializers.BOOLEAN);
+            .defineId(CubeEntity.class, EntityDataSerializers.BOOLEAN);
 
     public boolean first_time_spawn = true;
     public boolean has_spawn_children = false;
     private ListTag splist;
 
     @Override
-    protected void addAdditionalSaveData(CompoundTag compoundTag) {
+    public void addAdditionalSaveData(CompoundTag compoundTag) {
 
         compoundTag.putBoolean("first_time_spawn", first_time_spawn);
         // compoundTag.putBoolean("has_spawn_childrens", has_spawn_children);
@@ -62,6 +68,7 @@ public class CubeEntity extends Entity {
 
     @Override
     protected void defineSynchedData() {
+        super.defineSynchedData();
         this.entityData.define(DATA_Pushing, false);
 
     }
@@ -75,7 +82,7 @@ public class CubeEntity extends Entity {
     }
 
     @Override
-    protected void readAdditionalSaveData(CompoundTag compoundTag) {
+    public void readAdditionalSaveData(CompoundTag compoundTag) {
 
         if (compoundTag.contains("first_time_spawn", 99)) {
             first_time_spawn = compoundTag.getBoolean("first_time_spawn");
@@ -100,6 +107,14 @@ public class CubeEntity extends Entity {
                 (i / com.example.ExampleMod.pixcount % com.example.ExampleMod.pixcount)
                         * com.example.ExampleMod.pixsize + com.example.ExampleMod.pixsize / 2f - .5);
 
+    }
+
+    @Override
+    public boolean isPickable() {
+        return false;
+    }
+    @Override
+    public void aiStep() {
     }
 
     @Override
@@ -226,10 +241,19 @@ public class CubeEntity extends Entity {
 
     @Override
     public void kill() {
-        super.kill();
+        this.remove(RemovalReason.KILLED);
         getlivechildren().forEach(PixelEntity::kill);
     }
 
+    @Override
+    public boolean isDeadOrDying() {
+        return false;
+    }
+    @Override
+    public boolean hurt(DamageSource damageSource, float f) {
+        System.out.println("hurtcore"+f);
+        return false;
+    }
     public void onaddtolevel(Level level) {
         //System.out.println(level);
         if (first_time_spawn) {
@@ -285,5 +309,28 @@ public class CubeEntity extends Entity {
             }
         }
         
+    }
+
+    @Override
+    public Iterable<ItemStack> getArmorSlots() {
+        return new java.util.ArrayList<ItemStack>();
+    }
+
+    @Override
+    public ItemStack getItemBySlot(EquipmentSlot var1) {
+        return ItemStack.EMPTY;
+    }
+
+    @Override
+    public void setItemSlot(EquipmentSlot var1, ItemStack var2) {
+        return;
+    }
+
+    @Override
+    public HumanoidArm getMainArm() {
+        return HumanoidArm.RIGHT;
+    }
+    public double getAttributeValue(Attribute attribute) {
+        return 1.0f;
     }
 }
