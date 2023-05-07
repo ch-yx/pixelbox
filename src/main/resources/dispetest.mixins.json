@@ -3,12 +3,14 @@
 	"package": "com.example.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"mixins": [
-		"regentitymixin","collidemixin","leveladdentitymixin"
+	  "RegEntityMixin",
+	  "CollideMixin",
+	  "LevelAddEntityMixin"
 	],
 	"client": [
-		"regentityrendermixin"
+	  "RegEntityRenderMixin"
 	],
 	"injectors": {
-		"defaultRequire": 1
+	  "defaultRequire": 1
 	}
-}
+  }
