@@ -37,7 +37,7 @@ public class CubeEntity extends LivingEntity {
         first_time_spawn = true;
         has_spawn_children = false;
         enemy = Optional.ofNullable(null);
-
+        blocksBuilding=false;
     }
 
     private static final EntityDataAccessor<Boolean> DATA_Pushing = SynchedEntityData

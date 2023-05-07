@@ -146,7 +146,7 @@ public class PixelEntity extends Entity {
     }
 
     public void init(CompoundTag compound) {
-        this.setPos(compound.getDouble("x"), compound.getDouble("y"), compound.getDouble("z"));
+        this.setPos(Vec3.CODEC.decode(NbtOps.INSTANCE, compound.get("pos")).result().get().getFirst());
         var c = compound.getInt("color");
         this.setpixelcolor(ARGB32.red(c), ARGB32.green(c), ARGB32.blue(c));
         this.state = State.valueOf(compound.getString("state"));
@@ -166,9 +166,8 @@ public class PixelEntity extends Entity {
 
     public Tag write() {
         CompoundTag foo = new CompoundTag();
-        foo.putDouble("x", this.getX());
-        foo.putDouble("y", this.getY());
-        foo.putDouble("z", this.getZ());
+        Vec3.CODEC.encodeStart(NbtOps.INSTANCE, this.position()).result()
+                    .ifPresent(tag -> foo.put("pos", (Tag) tag));
         foo.putInt("color", this.getTeamColor());
         foo.putString("state", state.toString());
         if (goingdata != null) {
