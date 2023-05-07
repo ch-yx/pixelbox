@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 
 @Mixin({net.minecraft.world.level.entity.PersistentEntitySectionManager.class})
-public class leveladdentitymixin {
+public class LevelAddEntityMixin {
     @Inject(method = "addEntity", at = @At("RETURN"), cancellable = true)
     public void xxxxxx(net.minecraft.world.level.entity.EntityAccess entity,boolean bool,CallbackInfoReturnable<Boolean> cir) {
         if(entity instanceof com.example.CubeEntity ce){

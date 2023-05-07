@@ -22,12 +22,12 @@ import org.joml.Vector3f;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 @Environment(value = EnvType.CLIENT)
-public class renderer<T extends Entity>
+public class Renderer<T extends Entity>
         extends EntityRenderer<T> {
     static Tesselator tessellator = Tesselator.getInstance();
     static BufferBuilder bufferBuilder = tessellator.getBuilder();
     static Minecraft ins=Minecraft.getInstance();
-    public renderer(Context context) {
+    public Renderer(Context context) {
         super(context);
     }
 

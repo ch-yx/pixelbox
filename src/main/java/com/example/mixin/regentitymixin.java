@@ -2,7 +2,7 @@ package com.example.mixin;
 
 import org.spongepowered.asm.mixin.Mixin;
 
-import com.example.Entity_getter;
+import com.example.EntityGetter;
 
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -12,7 +12,7 @@ import com.example.CubeEntity;
 import com.example.PixelEntity;
 
 @Mixin(net.minecraft.world.entity.EntityType.class)
-public class regentitymixin implements Entity_getter {
+public class RegEntityMixin implements EntityGetter {
 	// @Inject(at = @At("TAIL"), method = "<clinit>")
 	// private void init(CallbackInfo info)
 

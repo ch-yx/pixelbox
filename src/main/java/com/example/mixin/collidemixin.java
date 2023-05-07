@@ -9,7 +9,7 @@ import com.example.PixelEntity;
 import net.minecraft.world.entity.Entity;
 
 @Mixin(Entity.class)
-public class collidemixin {
+public class CollideMixin {
     @Inject(method = "canCollideWith", at = @At("HEAD"), cancellable = true)
     public void canCollideWith(Entity entity,CallbackInfoReturnable<Boolean> cir) {
 

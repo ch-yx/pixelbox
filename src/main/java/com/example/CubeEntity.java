@@ -260,7 +260,7 @@ public class CubeEntity extends LivingEntity {
             first_time_spawn = false;
             for (int i = 0; i < children.length; i++) {
 
-                children[i] = (PixelEntity) ((Entity_getter) (EntityType.ALLAY)).PIXEL().create(level);
+                children[i] = (PixelEntity) ((EntityGetter) (EntityType.ALLAY)).PIXEL().create(level);
 
                 children[i].setPos(defaultposVec3(i).add(this.position()));
                 level.addFreshEntity(children[i]);
@@ -286,7 +286,7 @@ public class CubeEntity extends LivingEntity {
                         i++;
                         continue;
                     }
-                    children[i] = (PixelEntity) ((Entity_getter) (EntityType.ALLAY)).PIXEL().create(level);
+                    children[i] = (PixelEntity) ((EntityGetter) (EntityType.ALLAY)).PIXEL().create(level);
                     children[i].setOwner(this);
                     children[i].index = i;
                     i++;
