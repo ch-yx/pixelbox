@@ -1,6 +1,7 @@
 package com.example;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -26,6 +27,7 @@ import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import com.example.CubeEntity;
@@ -39,7 +41,8 @@ public class CubeEntity extends LivingEntity {
         super(entityType, world);
         first_time_spawn = true;
         has_spawn_children = false;
-        enemy = Optional.ofNullable(null);
+        enemy = Optional.empty();
+        enemyuuid=Optional.empty();
         blocksBuilding = false;
     }
 
@@ -54,6 +57,8 @@ public class CubeEntity extends LivingEntity {
     public void addAdditionalSaveData(CompoundTag compoundTag) {
         compoundTag.putBoolean("won", iswinner);
         compoundTag.putBoolean("first_time_spawn", first_time_spawn);
+        //System.out.println(enemy.orElse(null)+"==="+enemyuuid.orElse(null));
+        enemy.map(Entity::getUUID).or(()->enemyuuid).map(UUIDUtil::uuidToIntArray).ifPresent(id->compoundTag.putIntArray("enemy",id));
         // compoundTag.putBoolean("has_spawn_childrens", has_spawn_children);
         var list = new ListTag();
         for (PixelEntity child : children) {
@@ -68,6 +73,14 @@ public class CubeEntity extends LivingEntity {
     }
 
     public Optional<Entity> enemy;
+    public Optional<UUID> enemyuuid;
+    public void setEnemy(Optional<Entity> enemy) {
+        this.enemy = enemy;
+        this.enemyuuid=Optional.empty();
+    }
+    public void setEnemy(Entity enemy) {
+        setEnemy(Optional.ofNullable(enemy));
+    }
 
     public boolean iswinner;
 
@@ -90,6 +103,9 @@ public class CubeEntity extends LivingEntity {
     public void readAdditionalSaveData(CompoundTag compoundTag) {
         iswinner=compoundTag.getBoolean("won");
 
+        if (compoundTag.contains("enemy")) {
+            enemyuuid = Optional.of(UUIDUtil.uuidFromIntArray(compoundTag.getIntArray("enemy")));
+        } 
 
         if (compoundTag.contains("first_time_spawn", 99)) {
             first_time_spawn = compoundTag.getBoolean("first_time_spawn");
@@ -152,9 +168,15 @@ public class CubeEntity extends LivingEntity {
             return;
         }
         // super.tick();
+        if(this.enemy.isEmpty()&&this.enemyuuid.isPresent()){
+            var e = ((net.minecraft.server.level.ServerLevel)level()).getEntity(enemyuuid.get());
+            if (e != null) {
+                setEnemy(e);
+            }
+        }
         if (this.enemy.isPresent() && enemy.get().isRemoved()) {
             this.iswinner=true;
-            this.enemy = Optional.empty();
+            this.setEnemy(Optional.empty());
         }
         if (this.enemy.isEmpty()) {
             this.getidlechildren().forEach(p -> {

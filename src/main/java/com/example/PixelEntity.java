@@ -208,7 +208,7 @@ public class PixelEntity extends Entity {
             level().addFreshEntity(e);
             return InteractionResult.CONSUME;
         }
-        getOwner().enemy = Optional.ofNullable(player);
+        getOwner().setEnemy(player);
         var list = this.level().getEntitiesOfClass(PixelEntity.class,
                 this.getBoundingBox().inflate(com.example.ExampleMod.pixsize * 1.4));
         for (PixelEntity mob : list) {
@@ -236,7 +236,7 @@ public class PixelEntity extends Entity {
             return false;
         }
         if (damageSource.isIndirect() && damageSource.getEntity() != null && damageSource.getEntity() != getOwner()) {
-            getOwner().enemy = Optional.of(damageSource.getEntity());
+            getOwner().setEnemy(damageSource.getEntity());
             if (f > 0) {
                 this.kill();
                 if (dielast) {
