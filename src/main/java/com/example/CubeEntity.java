@@ -148,6 +148,13 @@ public class CubeEntity extends LivingEntity {
     public PushReaction getPistonPushReaction() {
         return PushReaction.IGNORE;
     }
+    public boolean allchildrenliving(){
+        return getlife()==this.children.length;
+    }
+    @Override
+    public boolean canChangeDimensions() {
+        return false;
+    }
 
     @Override
     public void setPos(double d, double e, double f) {

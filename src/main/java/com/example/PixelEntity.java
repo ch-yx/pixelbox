@@ -35,6 +35,12 @@ public class PixelEntity extends Entity {
 
     private CubeEntity owner;
     private boolean dielast;
+
+    @Override
+    public boolean canChangeDimensions() {
+        return false;
+    }
+
     public CubeEntity getOwner() {
         owner = (CubeEntity) Optional.ofNullable((Entity) owner)
                 .orElseGet(() -> this.level().getEntity(this.entityData.get(DATA_Owner)));
@@ -84,6 +90,7 @@ public class PixelEntity extends Entity {
             EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> DATA_Attacking = SynchedEntityData.defineId(PixelEntity.class,
             EntityDataSerializers.BOOLEAN);
+
     public PixelEntity(EntityType<? extends Entity> entityType, Level world) {
         super(entityType, world);
         this.blocksBuilding = true;
@@ -112,12 +119,15 @@ public class PixelEntity extends Entity {
         this.entityData.define(DATA_Coner, -1);
         this.entityData.define(DATA_Attacking, false);
     }
+
     public boolean isattacking() {
         return this.entityData.get(DATA_Attacking);
     }
+
     void setattacking(boolean b) {
         this.entityData.set(DATA_Attacking, b);
     }
+
     Vector3f getpixelcolor() {
         return this.entityData.get(DATA_Pix_color);
     }
@@ -175,7 +185,7 @@ public class PixelEntity extends Entity {
     public Tag write() {
         CompoundTag foo = new CompoundTag();
         Vec3.CODEC.encodeStart(NbtOps.INSTANCE, this.position()).result()
-                    .ifPresent(tag -> foo.put("pos", (Tag) tag));
+                .ifPresent(tag -> foo.put("pos", (Tag) tag));
         foo.putInt("color", this.getTeamColor());
         foo.putString("state", state.toString());
         if (goingdata != null) {
@@ -201,11 +211,17 @@ public class PixelEntity extends Entity {
         if (this.level().isClientSide) {
             return InteractionResult.SUCCESS;
         }
-        if (this.getOwner().iswinner) {
-            this.getOwner().kill();
-            var e = ((EntityGetter)(EntityType.ALLAY)).CUBE().create(level());
-            e.setPos(getOwner().position());
-            level().addFreshEntity(e);
+        if (this.getOwner().iswinner || (this.getOwner().enemy.isEmpty() && !this.getOwner().allchildrenliving())) {
+            if (!getOwner().isRemoved()) {
+                this.getOwner().kill();
+                var e = ((EntityGetter) (EntityType.ALLAY)).CUBE().create(level());
+                e.setPos(getOwner().position());
+                level().addFreshEntity(e);
+            }
+            return InteractionResult.CONSUME;
+        }
+        if (this.getOwner().enemy.isEmpty() && this.getOwner().allchildrenliving()) {
+            getOwner().setEnemy(player);
             return InteractionResult.CONSUME;
         }
         getOwner().setEnemy(player);
@@ -225,22 +241,36 @@ public class PixelEntity extends Entity {
 
     @Override
     public boolean hurt(DamageSource damageSource, float f) {
-        if (this.getOwner()==null) {
+        if (this.getOwner() == null) {
             return false;
         }
-        if (this.getOwner().iswinner) {
-            this.getOwner().kill();
-            var e = ((EntityGetter)(EntityType.ALLAY)).CUBE().create(level());
-            e.setPos(getOwner().position());
-            level().addFreshEntity(e);
-            return false;
-        }
+
         if (damageSource.isIndirect() && damageSource.getEntity() != null && damageSource.getEntity() != getOwner()) {
-            getOwner().setEnemy(damageSource.getEntity());
-            if (f > 0) {
-                this.kill();
-                if (dielast) {
-                    spawnAtLocation(Items.DIRT);
+            if (this.getOwner().iswinner || (this.getOwner().enemy.isEmpty() && !this.getOwner().allchildrenliving())) {
+                if (!getOwner().isRemoved()) {
+                    this.getOwner().kill();
+                    var e = ((EntityGetter) (EntityType.ALLAY)).CUBE().create(level());
+                    e.setPos(getOwner().position());
+                    level().addFreshEntity(e);
+                }
+                return false;
+            }
+            if (this.getOwner().enemy.isEmpty() && this.getOwner().allchildrenliving()) {
+                getOwner().setEnemy(damageSource.getEntity());
+            } else {
+                getOwner().setEnemy(damageSource.getEntity());
+                if (f > 0) {
+                    var list = this.level().getEntitiesOfClass(PixelEntity.class,
+                            this.getBoundingBox().inflate(com.example.ExampleMod.pixsize * 1.4));
+                    for (PixelEntity mob : list) {
+                        if (mob.getOwner() == this.getOwner()) {
+                            mob.kill();
+                            if (mob.dielast) {
+                                mob.spawnAtLocation(Items.DIRT);
+                            }
+                        }
+
+                    }
                 }
             }
         }
@@ -258,7 +288,7 @@ public class PixelEntity extends Entity {
         this.getOwner().lifecount -= 1;
         if (this.getOwner().lifecount == 0) {
             this.getOwner().kill();
-            this.dielast=true;
+            this.dielast = true;
         }
     }
 
