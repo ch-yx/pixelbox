@@ -1,5 +1,6 @@
 package com.example;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -7,6 +8,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -17,6 +19,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
@@ -37,7 +40,7 @@ public class CubeEntity extends LivingEntity {
         first_time_spawn = true;
         has_spawn_children = false;
         enemy = Optional.ofNullable(null);
-        blocksBuilding=false;
+        blocksBuilding = false;
     }
 
     private static final EntityDataAccessor<Boolean> DATA_Pushing = SynchedEntityData
@@ -49,7 +52,7 @@ public class CubeEntity extends LivingEntity {
 
     @Override
     public void addAdditionalSaveData(CompoundTag compoundTag) {
-
+        compoundTag.putBoolean("won", iswinner);
         compoundTag.putBoolean("first_time_spawn", first_time_spawn);
         // compoundTag.putBoolean("has_spawn_childrens", has_spawn_children);
         var list = new ListTag();
@@ -65,6 +68,8 @@ public class CubeEntity extends LivingEntity {
     }
 
     public Optional<Entity> enemy;
+
+    public boolean iswinner;
 
     @Override
     protected void defineSynchedData() {
@@ -83,6 +88,8 @@ public class CubeEntity extends LivingEntity {
 
     @Override
     public void readAdditionalSaveData(CompoundTag compoundTag) {
+        iswinner=compoundTag.getBoolean("won");
+
 
         if (compoundTag.contains("first_time_spawn", 99)) {
             first_time_spawn = compoundTag.getBoolean("first_time_spawn");
@@ -118,14 +125,35 @@ public class CubeEntity extends LivingEntity {
     }
 
     @Override
-    public void tick() {
+    protected void onChangedBlock(BlockPos blockPos) {
+        return;
+    }
+    @Override
+    public PushReaction getPistonPushReaction() {
+        return PushReaction.IGNORE;
+    }
 
-        if (this.level().isClientSide) {
-            super.tick();
+    @Override
+    public void setPos(double d, double e, double f) {
+        super.setPos(d, e, f);
+        if (this.level().isClientSide()) {
             return;
         }
-        super.tick();
+        this.level().players().forEach(player -> {
+            ((ServerPlayer) player).connection.send(getAddEntityPacket());
+        });
+    }
+
+    @Override
+    public void tick() {
+
+        if (this.level().isClientSide()) {
+            // super.tick();
+            return;
+        }
+        // super.tick();
         if (this.enemy.isPresent() && enemy.get().isRemoved()) {
+            this.iswinner=true;
             this.enemy = Optional.empty();
         }
         if (this.enemy.isEmpty()) {
@@ -215,7 +243,11 @@ public class CubeEntity extends LivingEntity {
                 }
             });
         }
-        getlivechildren().forEach(PixelEntity::loctick);
+        if (cracking <= 0) {
+            getlivechildren().forEach(PixelEntity::loctick);
+        }else{
+            cracking--;
+        }
     }
 
     Stream<PixelEntity> getidlechildren() {
@@ -249,13 +281,23 @@ public class CubeEntity extends LivingEntity {
     public boolean isDeadOrDying() {
         return false;
     }
+
+    int cracking = 0;
+
     @Override
     public boolean hurt(DamageSource damageSource, float f) {
-        System.out.println("hurtcore"+f);
+        if (damageSource.is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION)
+                || damageSource.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE)
+                || damageSource.is(net.minecraft.world.damagesource.DamageTypes.IN_WALL)
+                || damageSource.is(net.minecraft.world.damagesource.DamageTypes.PLAYER_ATTACK)) {
+            return false;
+        }
+        this.cracking = 5;
         return false;
     }
+
     public void onaddtolevel(Level level) {
-        //System.out.println(level);
+        // System.out.println(level);
         if (first_time_spawn) {
             first_time_spawn = false;
             for (int i = 0; i < children.length; i++) {
@@ -308,7 +350,7 @@ public class CubeEntity extends LivingEntity {
                 splist = new ListTag();
             }
         }
-        
+
     }
 
     @Override
