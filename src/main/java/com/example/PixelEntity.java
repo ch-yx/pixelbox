@@ -287,6 +287,7 @@ public class PixelEntity extends Entity {
         this.getOwner().getlife();
         this.getOwner().children[this.index] = null;
         this.getOwner().lifecount -= 1;
+        getOwner().updateprogress();
         if (this.getOwner().lifecount == 0) {
             this.getOwner().kill();
             this.dielast = true;

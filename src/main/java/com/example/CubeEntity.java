@@ -8,6 +8,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
@@ -22,6 +23,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.BossEvent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,8 +45,27 @@ public class CubeEntity extends LivingEntity {
         enemy = Optional.empty();
         enemyuuid=Optional.empty();
         blocksBuilding = false;
+        if(!world.isClientSide){
+            bossbar = new ServerBossEvent(this.getDisplayName(), BossEvent.BossBarColor.GREEN, BossEvent.BossBarOverlay.PROGRESS);
+        }else{
+            bossbar = null;
+        }
+    }
+    final ServerBossEvent bossbar;
+    @Override
+    public void startSeenByPlayer(ServerPlayer serverPlayer) {
+        super.startSeenByPlayer(serverPlayer);
+        this.bossbar.addPlayer(serverPlayer);
+        if (this.lifecount != null) {
+            updateprogress();
+        }
     }
 
+    @Override
+    public void stopSeenByPlayer(ServerPlayer serverPlayer) {
+        super.stopSeenByPlayer(serverPlayer);
+        this.bossbar.removePlayer(serverPlayer);
+    }
     private static final EntityDataAccessor<Boolean> DATA_Pushing = SynchedEntityData
             .defineId(CubeEntity.class, EntityDataSerializers.BOOLEAN);
 
@@ -378,7 +399,14 @@ public class CubeEntity extends LivingEntity {
                 splist = new ListTag();
             }
         }
+        updateprogress();
+    }
 
+    public void updateprogress() {
+        this.bossbar.setProgress(this.getlife()/(float)this.children.length);
+        if (this.getlife()<this.children.length/4) {
+            bossbar.setName(net.minecraft.network.chat.Component.empty().append(this.getDisplayName()).append(":  "+getlife()+"/"+children.length));
+        }
     }
 
     @Override
