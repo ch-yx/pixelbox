@@ -187,7 +187,7 @@ public class CubeEntity extends LivingEntity {
         }
         if (this.enemy.isEmpty()) {
             this.getidlechildren().forEach(p -> {
-                p.setgoing(0, new Vec3i(20, 20, 20), defaultposVec3(p.index).add(this.position()), 0, State.sleeping);
+                p.setgoing(0, 20, defaultposVec3(p.index).add(this.position()), 0, State.sleeping);
             });
         }
         if ((getId() - tickCount) % 300 == 0) {
@@ -198,7 +198,7 @@ public class CubeEntity extends LivingEntity {
                         Mth.clamp(t_.y, player.getEyeY() - 2, player.getEyeY() + 9),
                         Mth.clamp(t_.z, player.getZ() - 9, player.getZ() + 9));
                 getidlechildren().forEach(pixelEntity -> {
-                    pixelEntity.setgoing((int) (2 * random.triangle(3, 16)), new Vec3i(16, 16, 16),
+                    pixelEntity.setgoing((int) (2 * random.triangle(3, 16)), 16,
                             t.add(random.nextBoolean() ? pixelEntity.position().subtract(position())
                                     : defaultposVec3(pixelEntity.index)),
                             32);
@@ -250,7 +250,7 @@ public class CubeEntity extends LivingEntity {
                                     z = rtri(b.minZ, b.maxZ) + 3;
                                 }
                             }
-                            pix.setgoing(0, new Vec3i(10, 10, 10), new Vec3(x, y, z), 32);
+                            pix.setgoing(0, 10, new Vec3(x, y, z), 32);
                         });
                 if (!(sss[0].isEmpty() || sss[1].isEmpty())) {
                     var o1 = sss[0].get(random.nextInt(sss[0].size()));

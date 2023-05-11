@@ -21,6 +21,7 @@ import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.util.Mth;
 import net.minecraft.util.FastColor.ARGB32;
 import net.minecraft.world.phys.AABB;
 
@@ -328,14 +329,6 @@ public class PixelEntity extends Entity {
         int cd2;
         State nextstage;
 
-        Goingdata(int cd1, Vec3i targetstep, Vec3 target, int cd2) {
-            this.cd1 = cd1;
-            this.cd2 = cd2;
-            this.target = target;
-            this.targetstep = targetstep;
-            this.nextstage = State.IDLE;
-        }
-
         Goingdata(int cd1, Vec3i targetstep, Vec3 target, int cd2, State nextstage) {
             this.cd1 = cd1;
             this.cd2 = cd2;
@@ -347,14 +340,17 @@ public class PixelEntity extends Entity {
 
     Goingdata goingdata;
 
-    void setgoing(int cd1, Vec3i targetstep, Vec3 target, int cd2) {
-        this.state = State.GOING;
-        this.goingdata = this.new Goingdata(cd1, targetstep, target, cd2);
+    void setgoing(int cd1, int maxtargetstep, Vec3 target, int cd2) {
+        setgoing(cd1, maxtargetstep, target, cd2, State.IDLE);
     }
 
-    void setgoing(int cd1, Vec3i targetstep, Vec3 target, int cd2, State state) {
+    void setgoing(int cd1, int maxtargetstep, Vec3 target, int cd2, State state) {
         this.state = State.GOING;
-        this.goingdata = this.new Goingdata(cd1, targetstep, target, cd2, state);
+        var d = target.subtract(position()).scale(4);
+        int x = Mth.ceil(Math.abs(d.x));
+        int y = Mth.ceil(Math.abs(d.y));
+        int z = Mth.ceil(Math.abs(d.z));
+        this.goingdata = this.new Goingdata(cd1, new Vec3i(Math.min(x,maxtargetstep), Math.min(y,maxtargetstep), Math.min(z,maxtargetstep)), target, cd2, state);
     }
 
     private int conercountdown;
