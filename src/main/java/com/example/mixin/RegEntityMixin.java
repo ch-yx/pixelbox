@@ -34,4 +34,10 @@ public class RegEntityMixin implements EntityGetter {
 	public EntityType<?> PIXEL() {
 		return PIXEL;
 	}
+
+	@Override
+	public int id_get() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'id_get'");
+	}
 }

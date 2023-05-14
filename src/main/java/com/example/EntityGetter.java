@@ -6,4 +6,6 @@ public interface EntityGetter {
     public EntityType<?> CUBE();
 
     public EntityType<?> PIXEL();
+
+    public int id_get();
 }

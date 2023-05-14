@@ -8,7 +8,7 @@
 	  "LevelAddEntityMixin"
 	],
 	"client": [
-	  "RegEntityRenderMixin","TransMixin"
+	  "RegEntityRenderMixin","TransMixin","ProgramIdMixin"
 	],
 	"injectors": {
 	  "defaultRequire": 1
