@@ -134,9 +134,15 @@ public class Renderer<T extends Entity>
         Vector3f front=new Vector3f((float)v.x,(float)v.y,(float)v.z);
         front.cross(x1-x2, y1-y2, z1-z2).normalize(linew);
         var fx=front.x; var fy=front.y; var fz=front.z;
-        builder.vertex( mat, x1+fx, y1+fy, z1+fz).color(red1, grn1, blu1, alpha).endVertex();
-        builder.vertex( mat, x2+fx, y2+fy, z2+fz).color(red1, grn1, blu1, alpha).endVertex();
-        builder.vertex( mat, x2-fx, y2-fy, z2-fz).color(red1, grn1, blu1, alpha).endVertex();
-        builder.vertex( mat, x1-fx, y1-fy, z1-fz).color(red1, grn1, blu1, alpha).endVertex();
+        for(float step=-1.0f;step<=0.99;){
+
+            float al=Math.min(0.1f/(step*step),1.0f);
+            builder.vertex( mat, x1+fx*step, y1+fy*step, z1+fz*step).color(red1, grn1, blu1, alpha*al).endVertex();
+            builder.vertex( mat, x2+fx*step, y2+fy*step, z2+fz*step).color(red1, grn1, blu1, alpha*al).endVertex();
+            step+=0.02f;
+            al=Math.min(0.1f/(step*step),1.0f);
+            builder.vertex( mat, x2+fx*step, y2+fy*step, z2+fz*step).color(red1, grn1, blu1, alpha*al).endVertex();
+            builder.vertex( mat, x1+fx*step, y1+fy*step, z1+fz*step).color(red1, grn1, blu1, alpha*al).endVertex();
+        }
             }
 }

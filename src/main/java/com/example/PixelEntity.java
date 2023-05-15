@@ -308,7 +308,7 @@ public class PixelEntity extends Entity {
                     // x.setPos(v.add(x.position()));
                     x.hasImpulse = true;
                     if (x instanceof ServerPlayer sp) {
-                        sp.connection.teleport(sp.getX(), sp.getY(), sp.getZ(), sp.getYRot(), sp.getXRot());
+                        sp.connection.teleport(sp.getX(), sp.getY(), sp.getZ(), sp.getYRot(), sp.getXRot(),net.minecraft.world.entity.RelativeMovement.ROTATION);
                     }
                 });
 
