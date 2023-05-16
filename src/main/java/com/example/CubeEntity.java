@@ -43,15 +43,18 @@ public class CubeEntity extends LivingEntity {
         first_time_spawn = true;
         has_spawn_children = false;
         enemy = Optional.empty();
-        enemyuuid=Optional.empty();
+        enemyuuid = Optional.empty();
         blocksBuilding = false;
-        if(!world.isClientSide){
-            bossbar = new ServerBossEvent(this.getDisplayName(), BossEvent.BossBarColor.GREEN, BossEvent.BossBarOverlay.PROGRESS);
-        }else{
+        if (!world.isClientSide) {
+            bossbar = new ServerBossEvent(this.getDisplayName(), BossEvent.BossBarColor.GREEN,
+                    BossEvent.BossBarOverlay.PROGRESS);
+        } else {
             bossbar = null;
         }
     }
+
     final ServerBossEvent bossbar;
+
     @Override
     public void startSeenByPlayer(ServerPlayer serverPlayer) {
         super.startSeenByPlayer(serverPlayer);
@@ -66,6 +69,7 @@ public class CubeEntity extends LivingEntity {
         super.stopSeenByPlayer(serverPlayer);
         this.bossbar.removePlayer(serverPlayer);
     }
+
     private static final EntityDataAccessor<Boolean> DATA_Pushing = SynchedEntityData
             .defineId(CubeEntity.class, EntityDataSerializers.BOOLEAN);
 
@@ -77,8 +81,9 @@ public class CubeEntity extends LivingEntity {
     public void addAdditionalSaveData(CompoundTag compoundTag) {
         compoundTag.putBoolean("won", iswinner);
         compoundTag.putBoolean("first_time_spawn", first_time_spawn);
-        //System.out.println(enemy.orElse(null)+"==="+enemyuuid.orElse(null));
-        enemy.map(Entity::getUUID).or(()->enemyuuid).map(UUIDUtil::uuidToIntArray).ifPresent(id->compoundTag.putIntArray("enemy",id));
+        // System.out.println(enemy.orElse(null)+"==="+enemyuuid.orElse(null));
+        enemy.map(Entity::getUUID).or(() -> enemyuuid).map(UUIDUtil::uuidToIntArray)
+                .ifPresent(id -> compoundTag.putIntArray("enemy", id));
         // compoundTag.putBoolean("has_spawn_childrens", has_spawn_children);
         var list = new ListTag();
         for (PixelEntity child : children) {
@@ -94,10 +99,12 @@ public class CubeEntity extends LivingEntity {
 
     public Optional<Entity> enemy;
     public Optional<UUID> enemyuuid;
+
     public void setEnemy(Optional<Entity> enemy) {
         this.enemy = enemy;
-        this.enemyuuid=Optional.empty();
+        this.enemyuuid = Optional.empty();
     }
+
     public void setEnemy(Entity enemy) {
         setEnemy(Optional.ofNullable(enemy));
     }
@@ -121,11 +128,11 @@ public class CubeEntity extends LivingEntity {
 
     @Override
     public void readAdditionalSaveData(CompoundTag compoundTag) {
-        iswinner=compoundTag.getBoolean("won");
+        iswinner = compoundTag.getBoolean("won");
 
         if (compoundTag.contains("enemy")) {
             enemyuuid = Optional.of(UUIDUtil.uuidFromIntArray(compoundTag.getIntArray("enemy")));
-        } 
+        }
 
         if (compoundTag.contains("first_time_spawn", 99)) {
             first_time_spawn = compoundTag.getBoolean("first_time_spawn");
@@ -135,7 +142,7 @@ public class CubeEntity extends LivingEntity {
         if (!first_time_spawn) {
             this.splist = compoundTag.getList("children", 10);
         }
-        //onaddtolevel(level());
+        // onaddtolevel(level());
     }
 
     double rtri(double a, double b) {
@@ -156,6 +163,7 @@ public class CubeEntity extends LivingEntity {
     public boolean isPickable() {
         return false;
     }
+
     @Override
     public void aiStep() {
     }
@@ -164,13 +172,16 @@ public class CubeEntity extends LivingEntity {
     protected void onChangedBlock(BlockPos blockPos) {
         return;
     }
+
     @Override
     public PushReaction getPistonPushReaction() {
         return PushReaction.IGNORE;
     }
-    public boolean allchildrenliving(){
-        return getlife()==this.children.length;
+
+    public boolean allchildrenliving() {
+        return getlife() == this.children.length;
     }
+
     @Override
     public boolean canChangeDimensions() {
         return false;
@@ -195,14 +206,14 @@ public class CubeEntity extends LivingEntity {
             return;
         }
         // super.tick();
-        if(this.enemy.isEmpty()&&this.enemyuuid.isPresent()){
-            var e = ((net.minecraft.server.level.ServerLevel)level()).getEntity(enemyuuid.get());
+        if (this.enemy.isEmpty() && this.enemyuuid.isPresent()) {
+            var e = ((net.minecraft.server.level.ServerLevel) level()).getEntity(enemyuuid.get());
             if (e != null) {
                 setEnemy(e);
             }
         }
         if (this.enemy.isPresent() && enemy.get().isRemoved()) {
-            this.iswinner=true;
+            this.iswinner = true;
             this.setEnemy(Optional.empty());
         }
         if (this.enemy.isEmpty()) {
@@ -238,6 +249,20 @@ public class CubeEntity extends LivingEntity {
                 ArrayList<PixelEntity>[] sss = new ArrayList[] { new ArrayList<PixelEntity>(),
                         new ArrayList<PixelEntity>(),
                         new ArrayList<PixelEntity>(), new ArrayList<PixelEntity>() };
+                
+                if (player instanceof LivingEntity livingplayer && livingplayer.getHealth() < 2) {
+                    var foot = player.getBoundingBox().setMinY(player.getY()-3).setMaxY(player.getY());
+                    
+                    getidlechildren().filter(pixel->pixel.getY()<player.getY()-.5).forEach(pixel->{
+                        if(pixel.getBoundingBox().intersects(foot)){
+                            pixel.setgoing(random.nextInt(4, 16), 30, pixel.position().add(0, 3, 0), 16);
+                        }else{
+                            pixel.setgoing(random.nextInt(4, 16), 30, new Vec3(player.getRandomX(1),player.getY()-0.5,player.getRandomZ(1)), 30);
+                        }
+                    });
+        
+                }
+                
                 getidleorgoingchildren()
                         .filter(x -> !x.getBoundingBox().intersects(ss[0]) ? true : (sss[0].add(x) && false))
                         .filter(x -> !x.getBoundingBox().intersects(ss[1]) ? true : (sss[1].add(x) && false))
@@ -294,7 +319,7 @@ public class CubeEntity extends LivingEntity {
         }
         if (cracking <= 0) {
             getlivechildren().forEach(PixelEntity::loctick);
-        }else{
+        } else {
             cracking--;
         }
     }
@@ -403,9 +428,10 @@ public class CubeEntity extends LivingEntity {
     }
 
     public void updateprogress() {
-        this.bossbar.setProgress(this.getlife()/(float)this.children.length);
-        if (this.getlife()<this.children.length/4) {
-            bossbar.setName(net.minecraft.network.chat.Component.empty().append(this.getDisplayName()).append(":  "+getlife()+"/"+children.length));
+        this.bossbar.setProgress(this.getlife() / (float) this.children.length);
+        if (this.getlife() < this.children.length / 4) {
+            bossbar.setName(net.minecraft.network.chat.Component.empty().append(this.getDisplayName())
+                    .append(":  " + getlife() + "/" + children.length));
         }
     }
 
@@ -428,6 +454,7 @@ public class CubeEntity extends LivingEntity {
     public HumanoidArm getMainArm() {
         return HumanoidArm.RIGHT;
     }
+
     public double getAttributeValue(Attribute attribute) {
         return 1.0f;
     }
