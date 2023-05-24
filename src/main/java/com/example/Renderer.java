@@ -56,7 +56,7 @@ public class Renderer<T extends Entity>
                             }
                         });
                     }
-                }, "beam",DefaultVertexFormat.POSITION_COLOR);
+                }, "beam",DefaultVertexFormat.POSITION_COLOR_TEX);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -102,7 +102,7 @@ public class Renderer<T extends Entity>
             RenderSystem.depthFunc(515);
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
-            this.bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+            this.bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
 
             // var ssssss = Float.floatToIntBits(g)^childentity.tickCount;
             var v = ins.gameRenderer.getMainCamera().getPosition().subtract(childentity.position());
@@ -175,19 +175,9 @@ public class Renderer<T extends Entity>
         var fx = front.x;
         var fy = front.y;
         var fz = front.z;
-        float step = -1.0f;
-        float al = Math.min(0.2f / (step * step), 1.0f);
-        for (; step <= 0.99;) {
-            builder.vertex(mat, x1 + fx * step, y1 + fy * step, z1 + fz * step).color(red1, grn1, blu1, alpha * al)
-                    .endVertex();
-            builder.vertex(mat, x2 + fx * step, y2 + fy * step, z2 + fz * step).color(red1, grn1, blu1, alpha * al)
-                    .endVertex();
-            step += 0.02f;
-            al = Math.min(0.2f / (step * step), 1.0f);
-            builder.vertex(mat, x2 + fx * step, y2 + fy * step, z2 + fz * step).color(red1, grn1, blu1, alpha * al)
-                    .endVertex();
-            builder.vertex(mat, x1 + fx * step, y1 + fy * step, z1 + fz * step).color(red1, grn1, blu1, alpha * al)
-                    .endVertex();
-        }
+        builder.vertex( mat, x1+fx, y1+fy, z1+fz).color(red1, grn1, blu1, alpha).uv(0, 1).endVertex();
+        builder.vertex( mat, x2+fx, y2+fy, z2+fz).color(red1, grn1, blu1, alpha).uv(1, 1).endVertex();
+        builder.vertex( mat, x2-fx, y2-fy, z2-fz).color(red1, grn1, blu1, alpha).uv(1, -1).endVertex();
+        builder.vertex( mat, x1-fx, y1-fy, z1-fz).color(red1, grn1, blu1, alpha).uv(0, -1).endVertex();
     }
 }
