@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.example.PixelEntity;
 
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.FallingBlockEntity;
 
 @Mixin(Entity.class)
 public class CollideMixin {
@@ -14,6 +15,10 @@ public class CollideMixin {
     public void canCollideWith(Entity entity,CallbackInfoReturnable<Boolean> cir) {
 
         if(entity instanceof PixelEntity pe){
+            if ((Object)this instanceof FallingBlockEntity) {
+                cir.setReturnValue(false);
+                return;
+            }
             if(((Entity)(Object)this).getBoundingBox().inflate(-1.0E-7).intersects(pe.getBoundingBox())){
                 cir.setReturnValue(false);
                 return;
