@@ -10,6 +10,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -250,7 +251,7 @@ public class CubeEntity extends LivingEntity {
                         new ArrayList<PixelEntity>(),
                         new ArrayList<PixelEntity>(), new ArrayList<PixelEntity>() };
                 
-                if (player instanceof LivingEntity livingplayer && livingplayer.getHealth() < 2) {
+                if (player instanceof LivingEntity livingplayer && livingplayer.getHealth() < 2 && !player.getType().is(EntityTypeTags.FALL_DAMAGE_IMMUNE)) {
                     var foot = player.getBoundingBox().setMinY(player.getY()-3).setMaxY(player.getY());
                     
                     getidlechildren().filter(pixel->pixel.getY()<player.getY()-.5).forEach(pixel->{
@@ -457,5 +458,9 @@ public class CubeEntity extends LivingEntity {
 
     public double getAttributeValue(Attribute attribute) {
         return 1.0f;
+    }
+    @Override
+    public boolean isIgnoringBlockTriggers() {
+        return true;
     }
 }

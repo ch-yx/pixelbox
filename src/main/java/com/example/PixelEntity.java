@@ -517,5 +517,8 @@ public class PixelEntity extends Entity {
                 break;
         }
     }
-
+    @Override
+    public boolean isIgnoringBlockTriggers() {
+        return true;
+    }
 }
