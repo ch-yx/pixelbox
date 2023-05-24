@@ -1,7 +1,12 @@
 package com.example;
 
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexFormat;
+
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
@@ -23,8 +28,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 @Environment(value = EnvType.CLIENT)
 public class Renderer<T extends Entity>
         extends EntityRenderer<T> {
-    //static Tesselator tessellator = Tesselator.getInstance();
-    //static BufferBuilder bufferBuilder = tessellator.getBuilder();
+    static Tesselator tessellator = Tesselator.getInstance();
+    static BufferBuilder bufferBuilder = tessellator.getBuilder();
     static Minecraft ins=Minecraft.getInstance();
     public Renderer(Context context) {
         super(context);
@@ -45,7 +50,6 @@ public class Renderer<T extends Entity>
             int i) {
         VertexConsumer bufferBuilder = multiBufferSource.getBuffer(RenderType.debugQuads());
         // super.render(entity, f, g, poseStack, multiBufferSource, i);
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
         RenderSystem.disableCull();
         RenderSystem.enableDepthTest();
 
@@ -65,16 +69,23 @@ public class Renderer<T extends Entity>
 
         var con=((PixelEntity) childentity).getconer();
         if (con!=null&&con.getId()>childentity.getId()) {
-
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            RenderSystem.enableDepthTest();
+            RenderSystem.depthFunc(515);
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+            this.bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+            
+            //var ssssss = Float.floatToIntBits(g)^childentity.tickCount;
             var v =ins.gameRenderer.getMainCamera().getPosition().subtract(childentity.position());
             if (((PixelEntity) childentity).isattacking()) {
-                drawline(poseStack.last().pose(),v,bufferBuilder, 0f, com.example.ExampleMod.pixsize / 2, 0f,
+                drawline(poseStack.last().pose(),v,this.bufferBuilder, 0f, com.example.ExampleMod.pixsize / 2, 0f,
                 (float)(con.getX()-childentity.getX()), (float)(com.example.ExampleMod.pixsize / 2+con.getY()-childentity.getY()),(float) (con.getZ()-childentity.getZ()), 1.0f, 0.0f, 0.0f, 0.8f,ExampleMod.pixsize/2);
             } else {
-                drawline(poseStack.last().pose(),v,bufferBuilder, 0f, com.example.ExampleMod.pixsize / 2, 0f,
+                drawline(poseStack.last().pose(),v,this.bufferBuilder, 0f, com.example.ExampleMod.pixsize / 2, 0f,
                 (float)(con.getX()-childentity.getX()), (float)(com.example.ExampleMod.pixsize / 2+con.getY()-childentity.getY()),(float) (con.getZ()-childentity.getZ()), 1.0f, 0.0f, 0.0f, 0.5f,ExampleMod.pixsize/4);
             }
-
+            tessellator.end();
         }
         //tessellator.end();
 
