@@ -10,6 +10,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.culling.Frustum;
@@ -21,7 +22,6 @@ import net.minecraft.server.packs.resources.ResourceProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 
-import java.io.IOException;
 import java.util.Optional;
 
 import org.joml.Matrix4f;
@@ -57,8 +57,8 @@ public class Renderer<T extends Entity>
                         });
                     }
                 }, "beam",DefaultVertexFormat.POSITION_COLOR_TEX);
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            beam_shader=GameRenderer.getPositionColorTexShader();
         }
     }
 
