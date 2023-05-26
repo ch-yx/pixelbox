@@ -13,6 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderStateShard.ShaderStateShard;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
@@ -40,7 +41,7 @@ public class Renderer<T extends Entity>
         super(context);
     }
 
-    static net.minecraft.client.renderer.ShaderInstance beam_shader;
+    public static net.minecraft.client.renderer.ShaderInstance beam_shader;
     static {
         try {
             beam_shader = new net.minecraft.client.renderer.ShaderInstance(
@@ -61,7 +62,8 @@ public class Renderer<T extends Entity>
             beam_shader=GameRenderer.getPositionColorTexShader();
         }
     }
-
+    static{
+    }
     @Override
     public boolean shouldRender(T entity, Frustum frustum, double d, double e, double f) {
         return true;
@@ -97,27 +99,28 @@ public class Renderer<T extends Entity>
 
         var con = ((PixelEntity) childentity).getconer();
         if (con != null && con.getId() > childentity.getId()) {
-            RenderSystem.setShader(() -> beam_shader);// GameRenderer::getPositionColorShader);
+            bufferBuilder = multiBufferSource.getBuffer(RenderType.debugQuads());
+/*             RenderSystem.setShader(() -> beam_shader);// GameRenderer::getPositionColorShader);
             RenderSystem.enableDepthTest();
             RenderSystem.depthFunc(515);
             RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
-            this.bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
+            RenderSystem.defaultBlendFunc(); 
+            this.bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);*/
 
             // var ssssss = Float.floatToIntBits(g)^childentity.tickCount;
             var v = ins.gameRenderer.getMainCamera().getPosition().subtract(childentity.position());
             if (((PixelEntity) childentity).isattacking()) {
-                drawline(poseStack.last().pose(), v, this.bufferBuilder, 0f, com.example.ExampleMod.pixsize / 2, 0f,
+                drawline(poseStack.last().pose(), v, bufferBuilder, 0f, com.example.ExampleMod.pixsize / 2, 0f,
                         (float) (con.getX() - childentity.getX()),
                         (float) (com.example.ExampleMod.pixsize / 2 + con.getY() - childentity.getY()),
                         (float) (con.getZ() - childentity.getZ()), 1.0f, 0.0f, 0.0f, 0.8f, ExampleMod.pixsize / 2);
             } else {
-                drawline(poseStack.last().pose(), v, this.bufferBuilder, 0f, com.example.ExampleMod.pixsize / 2, 0f,
+                drawline(poseStack.last().pose(), v, bufferBuilder, 0f, com.example.ExampleMod.pixsize / 2, 0f,
                         (float) (con.getX() - childentity.getX()),
                         (float) (com.example.ExampleMod.pixsize / 2 + con.getY() - childentity.getY()),
                         (float) (con.getZ() - childentity.getZ()), 1.0f, 0.0f, 0.0f, 0.5f, ExampleMod.pixsize / 4);
             }
-            tessellator.end();
+            //tessellator.end();
         }
         // tessellator.end();
 
