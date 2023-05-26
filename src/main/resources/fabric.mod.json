@@ -31,4 +31,5 @@
 	"suggests": {
 		"another-mod": "*"
 	}
+	,"accessWidener" : "aw.accesswidener"
 }
