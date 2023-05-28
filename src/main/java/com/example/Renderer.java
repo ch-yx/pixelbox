@@ -62,8 +62,7 @@ public class Renderer<T extends Entity>
             beam_shader=GameRenderer.getPositionColorTexShader();
         }
     }
-    static{
-    }
+    public static RenderType beamrendertype;
     @Override
     public boolean shouldRender(T entity, Frustum frustum, double d, double e, double f) {
         return true;
@@ -99,7 +98,7 @@ public class Renderer<T extends Entity>
 
         var con = ((PixelEntity) childentity).getconer();
         if (con != null && con.getId() > childentity.getId()) {
-            bufferBuilder = multiBufferSource.getBuffer(RenderType.debugQuads());
+            bufferBuilder = multiBufferSource.getBuffer(beamrendertype);
 /*             RenderSystem.setShader(() -> beam_shader);// GameRenderer::getPositionColorShader);
             RenderSystem.enableDepthTest();
             RenderSystem.depthFunc(515);
