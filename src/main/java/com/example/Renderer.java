@@ -98,6 +98,21 @@ public class Renderer<T extends Entity>
 
         var con = ((PixelEntity) childentity).getconer();
         if (con != null && con.getId() > childentity.getId()) {
+            
+        if (beamrendertype == null) {
+            
+        
+		com.example.Renderer.beamrendertype = new net.minecraft.client.renderer.RenderType.CompositeRenderType(
+            "laser_beam", DefaultVertexFormat.POSITION_COLOR_TEX, VertexFormat.Mode.QUADS, 131072, false, true,
+            net.minecraft.client.renderer.RenderType.CompositeState.builder()
+                    .setShaderState(new ShaderStateShard(() -> com.example.Renderer.beam_shader))
+                    .setTransparencyState(com.example.mixin.RenderStateShardMixin.trans_para())
+                    .setCullState(com.example.mixin.RenderStateShardMixin.cull_para())
+                    .setOutputState(com.example.mixin.RenderStateShardMixin.target_para())
+                    .createCompositeState(false));
+
+        }
+            //Minecraft.getInstance().levelRenderer.getItemEntityTarget().blitToScreen(Minecraft.getInstance().getWindow().getWidth()/3, Minecraft.getInstance().getWindow().getHeight()/3,false);
             bufferBuilder = multiBufferSource.getBuffer(beamrendertype);
 /*             RenderSystem.setShader(() -> beam_shader);// GameRenderer::getPositionColorShader);
             RenderSystem.enableDepthTest();
