@@ -13,6 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderStateShard.OutputStateShard;
 import net.minecraft.client.renderer.RenderStateShard.ShaderStateShard;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -23,11 +24,13 @@ import net.minecraft.server.packs.resources.ResourceProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 
+import java.io.IOException;
 import java.util.Optional;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 @Environment(value = EnvType.CLIENT)
@@ -36,6 +39,7 @@ public class Renderer<T extends Entity>
     static Tesselator tessellator = Tesselator.getInstance();
     static BufferBuilder bufferBuilder = tessellator.getBuilder();
     static Minecraft ins = Minecraft.getInstance();
+    private RenderTarget target;
 
     public Renderer(Context context) {
         super(context);
@@ -99,21 +103,42 @@ public class Renderer<T extends Entity>
         var con = ((PixelEntity) childentity).getconer();
         if (con != null && con.getId() > childentity.getId()) {
             
-        if (beamrendertype == null) {
-            
-        
-		com.example.Renderer.beamrendertype = new net.minecraft.client.renderer.RenderType.CompositeRenderType(
-            "laser_beam", DefaultVertexFormat.POSITION_COLOR_TEX, VertexFormat.Mode.QUADS, 131072, false, true,
-            net.minecraft.client.renderer.RenderType.CompositeState.builder()
-                    .setShaderState(new ShaderStateShard(() -> com.example.Renderer.beam_shader))
-                    .setTransparencyState(com.example.mixin.RenderStateShardMixin.trans_para())
-                    .setCullState(com.example.mixin.RenderStateShardMixin.cull_para())
-                    .setOutputState(com.example.mixin.RenderStateShardMixin.target_para())
-                    .createCompositeState(false));
 
-        }
+            if (beamrendertype == null || this.target == null) {
+                Minecraft.getInstance().levelRenderer.transparencyChain.addTempTarget("beam", Minecraft.getInstance().getWindow().getWidth(), Minecraft.getInstance().getWindow().getHeight());
+                this.target = Minecraft.getInstance().levelRenderer.transparencyChain.getTempTarget("beam");
+                try {
+                    Minecraft.getInstance().levelRenderer.transparencyChain.addPass("bm", target, Minecraft.getInstance().getMainRenderTarget());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                System.out.println("\n\n|n\n\n\n\n\n\\\n");
+                System.out.println(this.target);
+                var target_para = new OutputStateShard("item_entity_target", () -> {
+                    if (Minecraft.useShaderTransparency()) {
+                        this.target.bindWrite(true);
+                    }
+        
+                }, () -> {
+                    if (Minecraft.useShaderTransparency()) {
+                        Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+                    }
+        
+                });
+            com.example.Renderer.beamrendertype = new net.minecraft.client.renderer.RenderType.CompositeRenderType(
+                "laser_beam", DefaultVertexFormat.POSITION_COLOR_TEX, VertexFormat.Mode.QUADS, 131072, false, true,
+                net.minecraft.client.renderer.RenderType.CompositeState.builder()
+                        .setShaderState(new ShaderStateShard(() -> com.example.Renderer.beam_shader))
+                        .setTransparencyState(com.example.mixin.RenderStateShardMixin.trans_para())
+                        .setCullState(com.example.mixin.RenderStateShardMixin.cull_para())
+                        .setOutputState(com.example.mixin.RenderStateShardMixin.target_para())
+                        .createCompositeState(false));
+    
+            }
             //Minecraft.getInstance().levelRenderer.getItemEntityTarget().blitToScreen(Minecraft.getInstance().getWindow().getWidth()/3, Minecraft.getInstance().getWindow().getHeight()/3,false);
             bufferBuilder = multiBufferSource.getBuffer(beamrendertype);
+            target.copyDepthFrom(Minecraft.getInstance().getMainRenderTarget());
 /*             RenderSystem.setShader(() -> beam_shader);// GameRenderer::getPositionColorShader);
             RenderSystem.enableDepthTest();
             RenderSystem.depthFunc(515);
@@ -135,6 +160,9 @@ public class Renderer<T extends Entity>
                         (float) (con.getZ() - childentity.getZ()), 1.0f, 0.0f, 0.0f, 0.5f, ExampleMod.pixsize / 4);
             }
             //tessellator.end();
+            
+            //target.blitToScreen(Minecraft.getInstance().getWindow().getWidth(), Minecraft.getInstance().getWindow().getHeight(),true);
+            
         }
         // tessellator.end();
 
