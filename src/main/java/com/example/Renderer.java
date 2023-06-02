@@ -107,17 +107,9 @@ public class Renderer<T extends Entity>
             if (beamrendertype == null || this.target == null) {
                 Minecraft.getInstance().levelRenderer.transparencyChain.addTempTarget("beam", Minecraft.getInstance().getWindow().getWidth(), Minecraft.getInstance().getWindow().getHeight());
                 this.target = Minecraft.getInstance().levelRenderer.transparencyChain.getTempTarget("beam");
-                try {
-                    Minecraft.getInstance().levelRenderer.transparencyChain.addPass("bm", target, Minecraft.getInstance().getMainRenderTarget());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                System.out.println("\n\n|n\n\n\n\n\n\\\n");
-                System.out.println(this.target);
-                var target_para = new OutputStateShard("item_entity_target", () -> {
+                var target_para = new OutputStateShard("beam_target", () -> {
                     if (Minecraft.useShaderTransparency()) {
-                        this.target.bindWrite(true);
+                        this.target.bindWrite(false);
                     }
         
                 }, () -> {
@@ -132,7 +124,7 @@ public class Renderer<T extends Entity>
                         .setShaderState(new ShaderStateShard(() -> com.example.Renderer.beam_shader))
                         .setTransparencyState(com.example.mixin.RenderStateShardMixin.trans_para())
                         .setCullState(com.example.mixin.RenderStateShardMixin.cull_para())
-                        .setOutputState(com.example.mixin.RenderStateShardMixin.target_para())
+                        .setOutputState(target_para)
                         .createCompositeState(false));
     
             }
@@ -146,7 +138,6 @@ public class Renderer<T extends Entity>
             RenderSystem.defaultBlendFunc(); 
             this.bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);*/
 
-            // var ssssss = Float.floatToIntBits(g)^childentity.tickCount;
             var v = ins.gameRenderer.getMainCamera().getPosition().subtract(childentity.position());
             if (((PixelEntity) childentity).isattacking()) {
                 drawline(poseStack.last().pose(), v, bufferBuilder, 0f, com.example.ExampleMod.pixsize / 2, 0f,
@@ -161,7 +152,6 @@ public class Renderer<T extends Entity>
             }
             //tessellator.end();
             
-            //target.blitToScreen(Minecraft.getInstance().getWindow().getWidth(), Minecraft.getInstance().getWindow().getHeight(),true);
             
         }
         // tessellator.end();
