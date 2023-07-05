@@ -73,6 +73,8 @@ public class CubeEntity extends LivingEntity {
 
     private static final EntityDataAccessor<Boolean> DATA_Pushing = SynchedEntityData
             .defineId(CubeEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<CompoundTag> DATA_KIDS = SynchedEntityData
+            .defineId(CubeEntity.class, EntityDataSerializers.COMPOUND_TAG);
 
     public boolean first_time_spawn = true;
     public boolean has_spawn_children = false;
@@ -116,9 +118,18 @@ public class CubeEntity extends LivingEntity {
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(DATA_Pushing, false);
-
+        this.entityData.define(DATA_KIDS,new CompoundTag());
     }
 
+    void updateKIDSforC(){   
+        var k = new CompoundTag();
+        k.putIntArray("k", getlivechildren().mapToInt(x->x.getId()).toArray());
+        this.entityData.set(DATA_KIDS, k);
+    }
+
+    void CgetKIDS(){
+        this.entityData.get(DATA_KIDS).getIntArray("k");
+    }
     void setpushing(boolean bl) {
         this.entityData.set(DATA_Pushing, bl);
     }
@@ -434,6 +445,7 @@ public class CubeEntity extends LivingEntity {
             bossbar.setName(net.minecraft.network.chat.Component.empty().append(this.getDisplayName())
                     .append(":  " + getlife() + "/" + children.length));
         }
+        if(!level().isClientSide())updateKIDSforC();
     }
 
     @Override
