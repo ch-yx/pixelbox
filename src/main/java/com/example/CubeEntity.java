@@ -62,6 +62,7 @@ public class CubeEntity extends LivingEntity {
         this.bossbar.addPlayer(serverPlayer);
         if (this.lifecount != null) {
             updateprogress();
+            if(!level().isClientSide())updateKIDSforC();
         }
     }
 
@@ -124,7 +125,7 @@ public class CubeEntity extends LivingEntity {
     void updateKIDSforC(){   
         var k = new CompoundTag();
         k.putInt("t", this.tickCount);
-        k.putIntArray("k", getlivechildren().mapToInt(x->x.getId()).toArray());
+        k.putIntArray("k", getlivechildren().filter(x->x.state==State.connecting).mapToInt(x->x.getId()).toArray());
         this.entityData.set(DATA_KIDS, k);
     }
 
@@ -439,6 +440,7 @@ public class CubeEntity extends LivingEntity {
             }
         }
         updateprogress();
+        if(!level().isClientSide())updateKIDSforC();
     }
 
     public void updateprogress() {
@@ -447,7 +449,7 @@ public class CubeEntity extends LivingEntity {
             bossbar.setName(net.minecraft.network.chat.Component.empty().append(this.getDisplayName())
                     .append(":  " + getlife() + "/" + children.length));
         }
-        if(!level().isClientSide())updateKIDSforC();
+        
     }
 
     @Override

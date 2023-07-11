@@ -1,9 +1,7 @@
 package com.example;
 
-import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
@@ -22,15 +20,12 @@ import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceProvider;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Optional;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
-
-import com.mojang.blaze3d.systems.RenderSystem;
 
 @Environment(value = EnvType.CLIENT)
 public class CubeRenderer<T extends Entity>
@@ -43,17 +38,14 @@ public class CubeRenderer<T extends Entity>
         super(context);
     }
 
-    public record Slink(Matrix4f pose, boolean isattacking, Vec3 mul, Vec3 mul2, Vec3 v,VertexConsumer bufferBuilder,double dist) implements Comparable {
+    public record Slink(Matrix4f pose, boolean isattacking, Vec3 mul, Vec3 mul2, Vec3 v,VertexConsumer bufferBuilder,double dist) implements Comparable<Slink> {
         Slink(Matrix4f pose, boolean isattacking, Vec3 mul, Vec3 mul2, Vec3 v,VertexConsumer bufferBuilder){
             this(pose, isattacking, mul, mul2, v, bufferBuilder, mul.add(mul2).lengthSqr());
         }
         
         @Override
-        public int compareTo(Object arg0) {
-            if (arg0 instanceof Slink s){
-                return this.dist<s.dist?-1:this.dist>s.dist?1:0;
-            }
-            return 0;
+        public int compareTo(Slink s) {
+            return this.dist<s.dist?-1:this.dist>s.dist?1:0;
         }
         public void action(){
             drawline(pose, v, bufferBuilder, (float)mul.x,(float)mul.y,(float)mul.z,(float)mul2.x,(float)mul2.y,(float)mul2.z, 1.0f, 0.0f, 0.0f, isattacking?0.8f:0.5f, ExampleMod.pixsize / 2);

@@ -12,6 +12,7 @@ out vec4 fragColor;
 void main() {
     vec4 color = vertexColor;
     float al = min(0.2 / (texCoord0.y * texCoord0.y), 1.0);
+    color.g = color.b = color.a * min(0.1 / (texCoord0.y * texCoord0.y), 1.0);
     color.a*=al;
     fragColor = color * ColorModulator;
 }

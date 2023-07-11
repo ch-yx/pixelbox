@@ -288,6 +288,7 @@ public class PixelEntity extends Entity {
         this.getOwner().children[this.index] = null;
         this.getOwner().lifecount -= 1;
         getOwner().updateprogress();
+        if(this.state==State.connecting)getOwner().updateKIDSforC();
         if (this.getOwner().lifecount == 0) {
             this.getOwner().kill();
             this.dielast = true;
@@ -365,12 +366,18 @@ public class PixelEntity extends Entity {
         other.setconer(this);
         this.conercountdown = 32;
         other.conercountdown = 32;
+        if (this.getOwner() instanceof CubeEntity ow) {
+            ow.updateKIDSforC();
+        }
     }
 
     void cutconnecting() {
         this.state = State.IDLE;
         this.setconer(null);
         this.setpixelcolor(0, 0, 0);
+        if (this.getOwner() instanceof CubeEntity ow) {
+            ow.updateKIDSforC();
+        }
     }
 
     boolean og = false;
