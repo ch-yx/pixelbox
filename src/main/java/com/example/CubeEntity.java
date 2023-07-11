@@ -127,8 +127,8 @@ public class CubeEntity extends LivingEntity {
         this.entityData.set(DATA_KIDS, k);
     }
 
-    void CgetKIDS(){
-        this.entityData.get(DATA_KIDS).getIntArray("k");
+    int[] CgetKIDS(){
+        return this.entityData.get(DATA_KIDS).getIntArray("k");
     }
     void setpushing(boolean bl) {
         this.entityData.set(DATA_Pushing, bl);
