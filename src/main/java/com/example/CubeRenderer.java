@@ -80,7 +80,7 @@ public class CubeRenderer<T extends Entity>
     public void render(T entity, float f, float g, PoseStack poseStack, MultiBufferSource multiBufferSource,
             int i) {
         poseStack.pushPose();
-        poseStack.translate(-entity.getX(), -entity.getY(), -entity.getZ());
+        poseStack.translate(-entity.getX(), (com.example.ExampleMod.pixsize / 2)-entity.getY(), -entity.getZ());
         for (int childentityindex : ((CubeEntity) entity).CgetKIDS()) {
             var childentity = entity.level().getEntity(childentityindex);
             if (childentity instanceof PixelEntity pix) {
@@ -146,14 +146,14 @@ public class CubeRenderer<T extends Entity>
             // var ssssss = Float.floatToIntBits(g)^childentity.tickCount;
             var v = ins.gameRenderer.getMainCamera().getPosition().subtract(childentity.position());
             if (((PixelEntity) childentity).isattacking()) {
-                drawline(poseStack.last().pose(), v, bufferBuilder, 0f, com.example.ExampleMod.pixsize / 2, 0f,
+                drawline(poseStack.last().pose(), v, bufferBuilder, 0f, 0f, 0f,
                         (float) (con.getX() - childentity.getX()),
-                        (float) (com.example.ExampleMod.pixsize / 2 + con.getY() - childentity.getY()),
+                        (float) (con.getY() - childentity.getY()),
                         (float) (con.getZ() - childentity.getZ()), 1.0f, 0.0f, 0.0f, 0.8f, ExampleMod.pixsize / 2);
             } else {
-                drawline(poseStack.last().pose(), v, bufferBuilder, 0f, com.example.ExampleMod.pixsize / 2, 0f,
+                drawline(poseStack.last().pose(), v, bufferBuilder, 0f, 0f, 0f,
                         (float) (con.getX() - childentity.getX()),
-                        (float) (com.example.ExampleMod.pixsize / 2 + con.getY() - childentity.getY()),
+                        (float) (con.getY() - childentity.getY()),
                         (float) (con.getZ() - childentity.getZ()), 1.0f, 0.0f, 0.0f, 0.5f, ExampleMod.pixsize / 4);
             }
             // tessellator.end();
