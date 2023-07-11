@@ -123,6 +123,7 @@ public class CubeEntity extends LivingEntity {
 
     void updateKIDSforC(){   
         var k = new CompoundTag();
+        k.putInt("t", this.tickCount);
         k.putIntArray("k", getlivechildren().mapToInt(x->x.getId()).toArray());
         this.entityData.set(DATA_KIDS, k);
     }
@@ -207,6 +208,7 @@ public class CubeEntity extends LivingEntity {
         }
         this.level().players().forEach(player -> {
             ((ServerPlayer) player).connection.send(getAddEntityPacket());
+            if(children!=null)updateKIDSforC();
         });
     }
 

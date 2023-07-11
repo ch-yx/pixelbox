@@ -20,6 +20,7 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceProvider;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
@@ -78,12 +79,21 @@ public class Renderer<T extends Entity>
     @Override
     public void render(T entity, float f, float g, PoseStack poseStack, MultiBufferSource multiBufferSource,
             int i) {
+        poseStack.pushPose();
+        poseStack.translate(-entity.getX(), -entity.getY(), -entity.getZ());
         for (int childentityindex : ((CubeEntity) entity).CgetKIDS()) {
             var childentity = entity.level().getEntity(childentityindex);
             if (childentity instanceof PixelEntity pix) {
+                poseStack.pushPose();
+                double x = Mth.lerp((double) g, pix.xOld, pix.getX());
+                double y = Mth.lerp((double) g, pix.yOld, pix.getY());
+                double z = Mth.lerp((double) g, pix.zOld, pix.getZ());
+                poseStack.translate(x, y, z);
                 renderP(pix, f, g, poseStack, multiBufferSource, i);
+                poseStack.popPose();
             }
         }
+        poseStack.popPose();
     }
 
     public void renderP(PixelEntity childentity, float f, float g, PoseStack poseStack,
