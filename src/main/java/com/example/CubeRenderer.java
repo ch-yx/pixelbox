@@ -35,14 +35,31 @@ import com.mojang.blaze3d.systems.RenderSystem;
 @Environment(value = EnvType.CLIENT)
 public class CubeRenderer<T extends Entity>
         extends EntityRenderer<T> {
-    static Tesselator tessellator = Tesselator.getInstance();
-    static BufferBuilder bufferBuilder = tessellator.getBuilder();
+    //static Tesselator tessellator = Tesselator.getInstance();
+    //static BufferBuilder bufferBuilder = tessellator.getBuilder();
     static Minecraft ins = Minecraft.getInstance();
 
     public CubeRenderer(Context context) {
         super(context);
     }
 
+    public record Slink(Matrix4f pose, boolean isattacking, Vec3 mul, Vec3 mul2, Vec3 v,VertexConsumer bufferBuilder,double dist) implements Comparable {
+        Slink(Matrix4f pose, boolean isattacking, Vec3 mul, Vec3 mul2, Vec3 v,VertexConsumer bufferBuilder){
+            this(pose, isattacking, mul, mul2, v, bufferBuilder, mul.add(mul2).lengthSqr());
+        }
+        
+        @Override
+        public int compareTo(Object arg0) {
+            if (arg0 instanceof Slink s){
+                return this.dist<s.dist?-1:this.dist>s.dist?1:0;
+            }
+            return 0;
+        }
+        public void action(){
+            drawline(pose, v, bufferBuilder, (float)mul.x,(float)mul.y,(float)mul.z,(float)mul2.x,(float)mul2.y,(float)mul2.z, 1.0f, 0.0f, 0.0f, isattacking?0.8f:0.5f, ExampleMod.pixsize / 2);
+        }
+    }
+    
     public static net.minecraft.client.renderer.ShaderInstance beam_shader;
     static {
         try {
@@ -65,6 +82,7 @@ public class CubeRenderer<T extends Entity>
         }
     }
     public static RenderType beamrendertype;
+    public static VertexConsumer bufferBuilder ;
 
     @Override
     public boolean shouldRender(T entity, Frustum frustum, double d, double e, double f) {
@@ -81,6 +99,9 @@ public class CubeRenderer<T extends Entity>
             int i) {
         poseStack.pushPose();
         poseStack.translate(-entity.getX(), (com.example.ExampleMod.pixsize / 2)-entity.getY(), -entity.getZ());
+
+        java.util.TreeSet<Slink> lks =new java.util.TreeSet<Slink>();
+
         for (int childentityindex : ((CubeEntity) entity).CgetKIDS()) {
             var childentity = entity.level().getEntity(childentityindex);
             if (childentity instanceof PixelEntity pix) {
@@ -89,28 +110,18 @@ public class CubeRenderer<T extends Entity>
                 double y = Mth.lerp((double) g, pix.yOld, pix.getY());
                 double z = Mth.lerp((double) g, pix.zOld, pix.getZ());
                 poseStack.translate(x, y, z);
-                renderP(pix, f, g, poseStack, multiBufferSource, i);
+                renderP(pix, f, g, poseStack, multiBufferSource, i,lks);
                 poseStack.popPose();
             }
         }
         poseStack.popPose();
+        lks.forEach(Slink::action);
     }
 
     public void renderP(PixelEntity childentity, float f, float g, PoseStack poseStack,
             MultiBufferSource multiBufferSource,
-            int i) {
-        VertexConsumer bufferBuilder ;
-        // super.render(entity, f, g, poseStack, multiBufferSource, i);
-
-
-        // PoseStack matrixStack = RenderSystem.getModelViewStack();
-        // matrixStack.pushPose();
-        // matrixStack.mulPoseMatrix(poseStack.last().pose());
-        // RenderSystem.applyModelViewMatrix();
-
-        // bufferBuilder.begin(VertexFormat.Mode.QUADS,
-        // DefaultVertexFormat.POSITION_COLOR);
-
+            int i, java.util.TreeSet<Slink> lks) {
+        
 
 
         var con = ((PixelEntity) childentity).getconer();
@@ -129,77 +140,33 @@ public class CubeRenderer<T extends Entity>
                                 .createCompositeState(false));
 
             }
-            // Minecraft.getInstance().levelRenderer.getItemEntityTarget().blitToScreen(Minecraft.getInstance().getWindow().getWidth()/3,
-            // Minecraft.getInstance().getWindow().getHeight()/3,false);
-            bufferBuilder = multiBufferSource.getBuffer(beamrendertype);
-            /*
-             * RenderSystem.setShader(() -> beam_shader);//
-             * GameRenderer::getPositionColorShader);
-             * RenderSystem.enableDepthTest();
-             * RenderSystem.depthFunc(515);
-             * RenderSystem.enableBlend();
-             * RenderSystem.defaultBlendFunc();
-             * this.bufferBuilder.begin(VertexFormat.Mode.QUADS,
-             * DefaultVertexFormat.POSITION_COLOR_TEX);
-             */
 
-            // var ssssss = Float.floatToIntBits(g)^childentity.tickCount;
+            bufferBuilder = multiBufferSource.getBuffer(beamrendertype);
+
             var v = ins.gameRenderer.getMainCamera().getPosition().subtract(childentity.position());
-            if (((PixelEntity) childentity).isattacking()) {
-                drawline(poseStack.last().pose(), v, bufferBuilder, 0f, 0f, 0f,
-                        (float) (con.getX() - childentity.getX()),
+            var step = new Vec3 ((float) (con.getX() - childentity.getX()),
                         (float) (con.getY() - childentity.getY()),
-                        (float) (con.getZ() - childentity.getZ()), 1.0f, 0.0f, 0.0f, 0.8f, ExampleMod.pixsize / 2);
-            } else {
-                drawline(poseStack.last().pose(), v, bufferBuilder, 0f, 0f, 0f,
-                        (float) (con.getX() - childentity.getX()),
-                        (float) (con.getY() - childentity.getY()),
-                        (float) (con.getZ() - childentity.getZ()), 1.0f, 0.0f, 0.0f, 0.5f, ExampleMod.pixsize / 4);
+                        (float) (con.getZ() - childentity.getZ()));
+            for (int index = 0; index < 100; index++) {
+                lks.add(new Slink(poseStack.last().pose(),((PixelEntity) childentity).isattacking(),step.scale(index/100.0),step.scale((index+1)/100.0),v,bufferBuilder));
             }
+            // if (((PixelEntity) childentity).isattacking()) {
+            //     drawline(poseStack.last().pose(), v, bufferBuilder, 0f, 0f, 0f,
+            //             (float) (con.getX() - childentity.getX()),
+            //             (float) (con.getY() - childentity.getY()),
+            //             (float) (con.getZ() - childentity.getZ()), 1.0f, 0.0f, 0.0f, 0.8f, ExampleMod.pixsize / 2);
+            // } else {
+            //     drawline(poseStack.last().pose(), v, bufferBuilder, 0f, 0f, 0f,
+            //             (float) (con.getX() - childentity.getX()),
+            //             (float) (con.getY() - childentity.getY()),
+            //             (float) (con.getZ() - childentity.getZ()), 1.0f, 0.0f, 0.0f, 0.5f, ExampleMod.pixsize / 4);
+            // }
             // tessellator.end();
         }
         // tessellator.end();
 
         // matrixStack.popPose();
         // RenderSystem.applyModelViewMatrix();
-    }
-
-    public static void drawBoxFaces(Matrix4f mat, VertexConsumer builder,
-            float x1, float y1, float z1,
-            float x2, float y2, float z2,
-            float red1, float grn1, float blu1, float alpha) {
-
-        builder.vertex(mat, x1, y1, z1).color(red1, grn1, blu1, alpha).endVertex();
-        builder.vertex(mat, x2, y1, z1).color(red1, grn1, blu1, alpha).endVertex();
-        builder.vertex(mat, x2, y2, z1).color(red1, grn1, blu1, alpha).endVertex();
-        builder.vertex(mat, x1, y2, z1).color(red1, grn1, blu1, alpha).endVertex();
-
-        builder.vertex(mat, x1, y1, z2).color(red1, grn1, blu1, alpha).endVertex();
-        builder.vertex(mat, x1, y2, z2).color(red1, grn1, blu1, alpha).endVertex();
-        builder.vertex(mat, x2, y2, z2).color(red1, grn1, blu1, alpha).endVertex();
-        builder.vertex(mat, x2, y1, z2).color(red1, grn1, blu1, alpha).endVertex();
-
-        builder.vertex(mat, x1, y1, z1).color(red1, grn1, blu1, alpha).endVertex();
-        builder.vertex(mat, x1, y2, z1).color(red1, grn1, blu1, alpha).endVertex();
-        builder.vertex(mat, x1, y2, z2).color(red1, grn1, blu1, alpha).endVertex();
-        builder.vertex(mat, x1, y1, z2).color(red1, grn1, blu1, alpha).endVertex();
-
-        builder.vertex(mat, x2, y1, z1).color(red1, grn1, blu1, alpha).endVertex();
-        builder.vertex(mat, x2, y1, z2).color(red1, grn1, blu1, alpha).endVertex();
-        builder.vertex(mat, x2, y2, z2).color(red1, grn1, blu1, alpha).endVertex();
-        builder.vertex(mat, x2, y2, z1).color(red1, grn1, blu1, alpha).endVertex();
-
-        builder.vertex(mat, x1, y1, z1).color(red1, grn1, blu1, alpha).endVertex();
-        builder.vertex(mat, x2, y1, z1).color(red1, grn1, blu1, alpha).endVertex();
-        builder.vertex(mat, x2, y1, z2).color(red1, grn1, blu1, alpha).endVertex();
-        builder.vertex(mat, x1, y1, z2).color(red1, grn1, blu1, alpha).endVertex();
-
-        builder.vertex(mat, x1, y2, z1).color(red1, grn1, blu1, alpha).endVertex();
-        builder.vertex(mat, x2, y2, z1).color(red1, grn1, blu1, alpha).endVertex();
-        builder.vertex(mat, x2, y2, z2).color(red1, grn1, blu1, alpha).endVertex();
-        builder.vertex(mat, x1, y2, z2).color(red1, grn1, blu1, alpha).endVertex();
-        ///
-
     }
 
     public static void drawline(Matrix4f mat, Vec3 v, VertexConsumer builder,
