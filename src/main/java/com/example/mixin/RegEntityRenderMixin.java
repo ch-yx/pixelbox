@@ -20,8 +20,8 @@ public class RegEntityRenderMixin {
 	private static <T extends Entity> void register(EntityType<? extends T> entityType, EntityRendererProvider<T> entityRendererProvider) {}
 	@Inject(at = @At("TAIL"), method = "<clinit>")
 	private static void init(CallbackInfo info) {
-		register(((EntityGetter)(EntityType.ALLAY)).CUBE(), com.example.Renderer::new);
-		register(((EntityGetter)(EntityType.ALLAY)).PIXEL(), NoopRenderer::new);
+		register(((EntityGetter)(EntityType.ALLAY)).CUBE(), com.example.CubeRenderer::new);
+		register(((EntityGetter)(EntityType.ALLAY)).PIXEL(), com.example.PixRenderer::new);
 	}
 
 }

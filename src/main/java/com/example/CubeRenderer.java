@@ -33,13 +33,13 @@ import org.joml.Vector3f;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 @Environment(value = EnvType.CLIENT)
-public class Renderer<T extends Entity>
+public class CubeRenderer<T extends Entity>
         extends EntityRenderer<T> {
     static Tesselator tessellator = Tesselator.getInstance();
     static BufferBuilder bufferBuilder = tessellator.getBuilder();
     static Minecraft ins = Minecraft.getInstance();
 
-    public Renderer(Context context) {
+    public CubeRenderer(Context context) {
         super(context);
     }
 
@@ -99,10 +99,9 @@ public class Renderer<T extends Entity>
     public void renderP(PixelEntity childentity, float f, float g, PoseStack poseStack,
             MultiBufferSource multiBufferSource,
             int i) {
-        VertexConsumer bufferBuilder = multiBufferSource.getBuffer(RenderType.debugQuads());
+        VertexConsumer bufferBuilder ;
         // super.render(entity, f, g, poseStack, multiBufferSource, i);
-        RenderSystem.disableCull();
-        RenderSystem.enableDepthTest();
+
 
         // PoseStack matrixStack = RenderSystem.getModelViewStack();
         // matrixStack.pushPose();
@@ -112,23 +111,18 @@ public class Renderer<T extends Entity>
         // bufferBuilder.begin(VertexFormat.Mode.QUADS,
         // DefaultVertexFormat.POSITION_COLOR);
 
-        var color = ((PixelEntity) childentity).getpixelcolor();
 
-        drawBoxFaces(poseStack.last().pose(), bufferBuilder, -com.example.ExampleMod.pixsize / 2, 0,
-                -com.example.ExampleMod.pixsize / 2,
-                com.example.ExampleMod.pixsize / 2, com.example.ExampleMod.pixsize,
-                com.example.ExampleMod.pixsize / 2, color.x, color.y, color.z, 0.8f);
 
         var con = ((PixelEntity) childentity).getconer();
         if (con != null && con.getId() > childentity.getId()) {
 
             if (beamrendertype == null) {
 
-                com.example.Renderer.beamrendertype = new net.minecraft.client.renderer.RenderType.CompositeRenderType(
+                com.example.CubeRenderer.beamrendertype = new net.minecraft.client.renderer.RenderType.CompositeRenderType(
                         "laser_beam", DefaultVertexFormat.POSITION_COLOR_TEX, VertexFormat.Mode.QUADS, 131072, false,
                         true,
                         net.minecraft.client.renderer.RenderType.CompositeState.builder()
-                                .setShaderState(new ShaderStateShard(() -> com.example.Renderer.beam_shader))
+                                .setShaderState(new ShaderStateShard(() -> com.example.CubeRenderer.beam_shader))
                                 .setTransparencyState(com.example.mixin.RenderStateShardMixin.trans_para())
                                 .setCullState(com.example.mixin.RenderStateShardMixin.cull_para())
                                 .setOutputState(com.example.mixin.RenderStateShardMixin.target_para())
