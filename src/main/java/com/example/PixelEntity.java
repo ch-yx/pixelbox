@@ -366,7 +366,7 @@ public class PixelEntity extends Entity {
         other.setconer(this);
         this.conercountdown = 32;
         other.conercountdown = 32;
-        if (this.getOwner() instanceof CubeEntity ow) {
+        if ((Object)this.getOwner() instanceof CubeEntity ow) {
             ow.updateKIDSforC();
         }
     }
@@ -375,7 +375,7 @@ public class PixelEntity extends Entity {
         this.state = State.IDLE;
         this.setconer(null);
         this.setpixelcolor(0, 0, 0);
-        if (this.getOwner() instanceof CubeEntity ow) {
+        if ((Object)this.getOwner() instanceof CubeEntity ow) {
             ow.updateKIDSforC();
         }
     }
