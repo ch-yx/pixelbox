@@ -34,7 +34,7 @@ public class PixRenderer<T extends Entity>
         super(context);
     }
 
-    public static net.minecraft.client.renderer.ShaderInstance beam_shader;
+/*     public static net.minecraft.client.renderer.ShaderInstance beam_shader;
     static {
         try {
             beam_shader = new net.minecraft.client.renderer.ShaderInstance(
@@ -55,7 +55,7 @@ public class PixRenderer<T extends Entity>
             beam_shader = GameRenderer.getPositionColorTexShader();
         }
     }
-    public static RenderType beamrendertype;
+    public static RenderType beamrendertype; */
 
     @Override
     public boolean shouldRender(T entity, Frustum frustum, double d, double e, double f) {

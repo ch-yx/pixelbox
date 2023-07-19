@@ -46,7 +46,7 @@ public class CubeRenderer<T extends Entity>
 
         @Override
         public int compareTo(Slink s) {
-            return this.dist < s.dist ? -1 : this.dist > s.dist ? 1 : this.hashCode()<s.hashCode()? 1:0;
+            return this.dist < s.dist ? -1 : this.dist > s.dist ? 1 : this.hashCode()<s.hashCode()? 1:this.hashCode()>s.hashCode()?-1:0;
         }
 
 
@@ -147,11 +147,12 @@ public class CubeRenderer<T extends Entity>
             var step = new Vec3((float) (con.getX() - childentity.getX()),
                     (float) (con.getY() - childentity.getY()),
                     (float) (con.getZ() - childentity.getZ()));
+            int steps=(int)(step.length()/ExampleMod.pixsize)*2+1;
             Vector3f front = new Vector3f((float) v.x, (float) v.y, (float) v.z);
             front.cross((float) step.x, (float) step.y, (float) step.z).normalize(ExampleMod.pixsize / 2);
-            for (int index = 0; index < 100; index++) {
+            for (int index = 0; index < steps; index++) {
                 lks.add(new Slink(poseStack.last().pose(), ((PixelEntity) childentity).isattacking(),
-                        step.scale(index / 100.0), step.scale((index + 1) / 100.0),  bufferBuilder, front));
+                        step.scale(index / (double)steps), step.scale((index + 1) / (double)steps),  bufferBuilder, front));
             }
             // if (((PixelEntity) childentity).isattacking()) {
             // drawline(poseStack.last().pose(), v, bufferBuilder, 0f, 0f, 0f,
