@@ -22,6 +22,7 @@ public class RegEntityRenderMixin {
 	private static void init(CallbackInfo info) {
 		register(((EntityGetter)(EntityType.ALLAY)).CUBE(), com.example.CubeRenderer::new);
 		register(((EntityGetter)(EntityType.ALLAY)).PIXEL(), com.example.PixRenderer::new);
+		register(((EntityGetter)(EntityType.ALLAY)).LINE(), com.example.LightningLineRenderer::new);
 	}
 
 }
