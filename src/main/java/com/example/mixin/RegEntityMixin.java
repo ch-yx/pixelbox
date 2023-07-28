@@ -30,7 +30,7 @@ public class RegEntityMixin implements EntityGetter {
 	private static final EntityType<LineEntity> LINE = Registry.register(
 			BuiltInRegistries.ENTITY_TYPE,
 			"pixelbox:lightning",
-			net.minecraft.world.entity.EntityType.Builder.of(LineEntity::new, MobCategory.MISC).noSave().clientTrackingRange(255).updateInterval(1).sized(0,0)
+			net.minecraft.world.entity.EntityType.Builder.of(LineEntity::new, MobCategory.MISC).clientTrackingRange(255).updateInterval(1).sized(0,0)
 					.build("pixelbox:lightning"));
 
 	public EntityType<?> CUBE() {

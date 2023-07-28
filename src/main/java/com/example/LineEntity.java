@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.joml.Vector3f;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -21,37 +22,32 @@ import net.minecraft.world.phys.Vec3;
 public class LineEntity extends Entity implements TraceableEntity {
     public Vector3f randomtargetoffest;
 
-    private LineEntity(EntityType<?> entityType, Level level, int i) {
-        super(entityType, level);
-    }
     public LineEntity(EntityType<?> entityType, Level level) {
         super(entityType, level);
-        
-        axis = new Vec3(2, -4, 6);
-        Vector3f randomtarget = randomtarget(axis);
-        randomtargetoffest = randomtargetoffest(randomtarget);
-        setTarget(randomtarget.sub(randomtargetoffest));
-        setMvprogress1(0);
-        setMvprogress2(-10);
-        setSp(0);
-        setEp(10);
-        owneruuid = Optional.empty();
-        if (!precise) {
-            randomtargetoffest=new Vector3f();
-        }
+    }
+
+
+
+    public Vector3f conv(Vec3 axis) {
+        return new Vector3f((float) axis.x, (float) axis.y, (float) axis.z);
+    }
+
+    public Vec3 conv(Vector3f axis) {
+        return new Vec3(axis.x, axis.y, axis.z);
     }
 
     public Vector3f randomtarget(Vec3 axis) {
-        var a = new Vector3f((float) axis.x, (float) axis.y, (float) axis.z);
-        a.mul((float)this.random.nextGaussian() * 0.3f + 1f);
+        var a = conv(axis);
+        a.mul((float) this.random.nextGaussian() * 0.3f + 1f);
         return a;
     }
+
     public Vector3f randomtargetoffest(Vector3f a) {
         Vector3f v1 = new Vector3f().orthogonalizeUnit(a);
         Vector3f v2 = new Vector3f();
         v1.cross(a, v2);
-        v2.normalize(2*(float)this.random.nextGaussian());
-        v1.mul(2*(float)this.random.nextGaussian());
+        v2.normalize(2 * (float) this.random.nextGaussian());
+        v1.mul(2 * (float) this.random.nextGaussian());
         return v2.add(v1);
 
     }
@@ -83,7 +79,14 @@ public class LineEntity extends Entity implements TraceableEntity {
     }
 
     public void setTarget(Vector3f target) {
+        if (target == null || target.lengthSquared()<0.002) {
+            target=new Vector3f(0f, 0.3f, 0f);
+        }
         this.entityData.set(DATA_target, target);
+    }
+
+    public void setTarget(Vec3 first) {
+        setTarget(conv(first));
     }
 
     public double getSp() {
@@ -123,7 +126,7 @@ public class LineEntity extends Entity implements TraceableEntity {
 
         if (this.getMvprogress1() > this.getEp() && !hadkid) {
             createnext();
-            var ___=(this.random.nextFloat()<0.2)?createnext():null;
+            var ___ = (this.random.nextFloat() < 0.2) ? createnext() : null;
         }
         var t1 = fp(Math.min(getMvprogress1(), getEp()), getSp(), getEp(), getTarget());
         var t2 = fp(Math.max(getMvprogress2(), getSp()), getSp(), getEp(), getTarget());
@@ -145,11 +148,11 @@ public class LineEntity extends Entity implements TraceableEntity {
         if (age > 7) {
             return null;
         }
-        var slave = new LineEntity(getType(), level(),37);
+        var slave = new LineEntity(getType(), level());
         slave.setPos(position().add(getTarget()));
         slave.axis = axis;
         Vector3f randomtarget = slave.randomtarget(slave.axis);
-        slave.randomtargetoffest=slave.randomtargetoffest(randomtarget);
+        slave.randomtargetoffest = slave.randomtargetoffest(randomtarget);
         slave.setTarget(randomtarget.add(this.randomtargetoffest).sub(slave.randomtargetoffest));
         slave.setSp(getEp());
         slave.setEp(slave.getSp() + slave.getTarget().length());
@@ -159,9 +162,9 @@ public class LineEntity extends Entity implements TraceableEntity {
         slave.owneruuid = owneruuid;
         this.level().addFreshEntity(slave);
         hadkid = true;
-        slave.precise=precise;
+        slave.precise = precise;
         if (!precise) {
-            slave.randomtargetoffest=new Vector3f();
+            slave.randomtargetoffest = new Vector3f();
         }
         return slave;
     }
@@ -187,13 +190,53 @@ public class LineEntity extends Entity implements TraceableEntity {
     }
 
     @Override
-    protected void readAdditionalSaveData(CompoundTag var1) {
-        System.out.println("creating"+this);
+    protected void readAdditionalSaveData(CompoundTag compound) {
+        //System.out.println("creating" + this);
+        if (compound.contains("axis"))
+            axis = Vec3.CODEC.decode(NbtOps.INSTANCE, compound.get("axis")).result().get().getFirst();
+        if (axis==null||axis.lengthSqr() < 0.002) {
+            axis = new Vec3(2, -4, 6);
+        }
+        if (compound.contains("target") && compound.contains("offset")) {
+            setTarget(Vec3.CODEC.decode(NbtOps.INSTANCE, compound.get("target")).result().get().getFirst());
+            randomtargetoffest = conv(Vec3.CODEC.decode(NbtOps.INSTANCE, compound.get("offset")).result().get().getFirst());
+        } else {
+            Vector3f randomtarget = randomtarget(axis);
+            randomtargetoffest = randomtargetoffest(randomtarget);
+            setTarget(randomtarget.sub(randomtargetoffest));
+        }
+
+        ;
+        setMvprogress1(compound.contains("mv1", 99)?compound.getInt("mv1"):0);
+        setMvprogress2(compound.contains("mv2", 99)?compound.getInt("mv2"):-10);
+        setSp(compound.contains("sp", 99)?compound.getDouble("sp"):0);
+        setEp(compound.contains("ep", 99)?compound.getDouble("ep"):10);
+        owneruuid = Optional.ofNullable(compound.hasUUID("owner")?compound.getUUID("owner"):null);
+        precise=compound.getBoolean("precise");
+        if (!precise) {
+            randomtargetoffest = new Vector3f();
+        }
+        hadkid=compound.getBoolean("hadkid");
+        age=compound.getInt("age");
     }
 
     @Override
-    protected void addAdditionalSaveData(CompoundTag var1) {
-        System.out.println("saving"+this);
+    protected void addAdditionalSaveData(CompoundTag compound) {
+        //System.out.println("saving" + this);
+        Vec3.CODEC.encodeStart(NbtOps.INSTANCE, axis).result()
+                .ifPresent(tag -> compound.put("axis", tag));
+        Vec3.CODEC.encodeStart(NbtOps.INSTANCE, getTarget()).result()
+                .ifPresent(tag -> compound.put("target", tag));
+        Vec3.CODEC.encodeStart(NbtOps.INSTANCE, conv(randomtargetoffest)).result()
+                .ifPresent(tag -> compound.put("offset", tag));
+        compound.putInt("mv1", getMvprogress1());
+        compound.putInt("mv2", getMvprogress2());
+        compound.putDouble("sp", getSp());
+        compound.putDouble("ep", getEp());
+        owneruuid.ifPresent(uuid->compound.putUUID("owner", uuid));
+        compound.putBoolean("precise", precise);
+        compound.putBoolean("hadkid", hadkid);
+        compound.putInt("age", age);
     }
 
     @Override
