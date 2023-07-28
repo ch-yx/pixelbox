@@ -19,33 +19,47 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 public class LineEntity extends Entity implements TraceableEntity {
+    public Vector3f randomtargetoffest;
+
+    private LineEntity(EntityType<?> entityType, Level level, int i) {
+        super(entityType, level);
+    }
     public LineEntity(EntityType<?> entityType, Level level) {
         super(entityType, level);
         
         axis = new Vec3(2, -4, 6);
-        setTarget(randomtarget(axis));
+        Vector3f randomtarget = randomtarget(axis);
+        randomtargetoffest = randomtargetoffest(randomtarget);
+        setTarget(randomtarget.sub(randomtargetoffest));
         setMvprogress1(0);
         setMvprogress2(-10);
         setSp(0);
         setEp(10);
         owneruuid = Optional.empty();
+        if (!precise) {
+            randomtargetoffest=new Vector3f();
+        }
     }
 
     public Vector3f randomtarget(Vec3 axis) {
         var a = new Vector3f((float) axis.x, (float) axis.y, (float) axis.z);
         a.mul((float)this.random.nextGaussian() * 0.3f + 1f);
+        return a;
+    }
+    public Vector3f randomtargetoffest(Vector3f a) {
         Vector3f v1 = new Vector3f().orthogonalizeUnit(a);
         Vector3f v2 = new Vector3f();
         v1.cross(a, v2);
         v2.normalize(2*(float)this.random.nextGaussian());
         v1.mul(2*(float)this.random.nextGaussian());
-        return a.add(v2).add(v1);
+        return v2.add(v1);
 
     }
 
     public boolean hadkid;
     public int age;
     public Vec3 axis;
+    public boolean precise;
 
     public int getMvprogress1() {
         return this.entityData.get(DATA_mvprogress1);
@@ -109,6 +123,7 @@ public class LineEntity extends Entity implements TraceableEntity {
 
         if (this.getMvprogress1() > this.getEp() && !hadkid) {
             createnext();
+            var ___=(this.random.nextFloat()<0.2)?createnext():null;
         }
         var t1 = fp(Math.min(getMvprogress1(), getEp()), getSp(), getEp(), getTarget());
         var t2 = fp(Math.max(getMvprogress2(), getSp()), getSp(), getEp(), getTarget());
@@ -130,10 +145,12 @@ public class LineEntity extends Entity implements TraceableEntity {
         if (age > 7) {
             return null;
         }
-        var slave = new LineEntity(getType(), level());
+        var slave = new LineEntity(getType(), level(),37);
         slave.setPos(position().add(getTarget()));
         slave.axis = axis;
-        slave.setTarget(slave.randomtarget(axis));
+        Vector3f randomtarget = slave.randomtarget(slave.axis);
+        slave.randomtargetoffest=slave.randomtargetoffest(randomtarget);
+        slave.setTarget(randomtarget.add(this.randomtargetoffest).sub(slave.randomtargetoffest));
         slave.setSp(getEp());
         slave.setEp(slave.getSp() + slave.getTarget().length());
         slave.age = age + 1;
@@ -142,6 +159,10 @@ public class LineEntity extends Entity implements TraceableEntity {
         slave.owneruuid = owneruuid;
         this.level().addFreshEntity(slave);
         hadkid = true;
+        slave.precise=precise;
+        if (!precise) {
+            slave.randomtargetoffest=new Vector3f();
+        }
         return slave;
     }
 
@@ -167,10 +188,12 @@ public class LineEntity extends Entity implements TraceableEntity {
 
     @Override
     protected void readAdditionalSaveData(CompoundTag var1) {
+        System.out.println("creating"+this);
     }
 
     @Override
     protected void addAdditionalSaveData(CompoundTag var1) {
+        System.out.println("saving"+this);
     }
 
     @Override
