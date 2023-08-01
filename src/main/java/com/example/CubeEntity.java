@@ -114,6 +114,8 @@ public class CubeEntity extends LivingEntity {
     }
 
     public boolean iswinner;
+    private long lifecachefortask;
+    private Object task;
 
     @Override
     protected void defineSynchedData() {
@@ -255,6 +257,18 @@ public class CubeEntity extends LivingEntity {
 
         } else {
             this.enemy.ifPresent(player -> {
+                if (this.task == null && getlife()>10) {
+                    for(int j : new int[]{this.children.length/2,this.children.length/3,this.children.length/4}){
+                        if(this.lifecachefortask>=j&&getlife()<j){
+                            createtask();
+                            break;
+                        }
+                    }
+                }
+                this.lifecachefortask=getlife();
+                if (this.task != null) {
+                    this.task.tick();
+                }
                 var ss = new AABB[] {
                         player.getBoundingBox().inflate(0, 0, 3).move(3, 0, 0),
                         player.getBoundingBox().inflate(0, 0, 3).move(-3, 0, 0),
@@ -337,6 +351,9 @@ public class CubeEntity extends LivingEntity {
         } else {
             cracking--;
         }
+    }
+
+    private void createtask() {
     }
 
     Stream<PixelEntity> getidlechildren() {
