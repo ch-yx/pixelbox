@@ -69,6 +69,7 @@ public class LightningLineRenderer<T extends Entity>
         var target = entity.getTarget();
 
         var v = ins.gameRenderer.getMainCamera().getPosition().subtract(entity.position());
+        if(entity.getMvprogress1()<entity.getSp())return;
         var p1 = Math.min(entity.getMvprogress1(), entity.getEp());
         var p2 = Math.max(entity.getMvprogress2(), entity.getSp());
         var t1 = fp(p1, entity.getSp(), entity.getEp(), target);

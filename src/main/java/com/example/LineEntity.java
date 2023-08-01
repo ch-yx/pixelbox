@@ -136,6 +136,8 @@ public class LineEntity extends Entity implements TraceableEntity {
             createnext();
             var ___ = (this.random.nextFloat() < 0.2) ? createnext() : null;
         }
+        do{
+        if(getMvprogress1()<getSp())break;
         var t1 = fp(Math.min(getMvprogress1(), getEp()), getSp(), getEp(), getTarget());
         var t2 = fp(Math.max(getMvprogress2(), getSp()), getSp(), getEp(), getTarget());
         var v1 = position().add(t1);
@@ -148,6 +150,7 @@ public class LineEntity extends Entity implements TraceableEntity {
                         doEnchantDamageEffects(getOwner() instanceof LivingEntity l ? l : null, x);
                 });
         ;
+        }while(false);
         // System.out.println(mvprogress1 + "#" + this + this.level().getGameTime() +
         // "tking");
     }
