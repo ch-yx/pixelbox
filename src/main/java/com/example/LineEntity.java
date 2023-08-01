@@ -26,6 +26,14 @@ public class LineEntity extends Entity implements TraceableEntity {
         super(entityType, level);
     }
 
+    public static LineEntity create_line(Level level, Vec3 axis, boolean b) {
+        var t =new LineEntity(((EntityGetter)(EntityType.ALLAY)).LINE(), level);
+        t.axis=axis;
+        t.precise=b;
+        t.readAdditionalSaveData(new CompoundTag());
+        level.addFreshEntity(t);
+        return t;
+    }
 
 
     public Vector3f conv(Vec3 axis) {
@@ -212,7 +220,8 @@ public class LineEntity extends Entity implements TraceableEntity {
         setSp(compound.contains("sp", 99)?compound.getDouble("sp"):0);
         setEp(compound.contains("ep", 99)?compound.getDouble("ep"):10);
         owneruuid = Optional.ofNullable(compound.hasUUID("owner")?compound.getUUID("owner"):null);
-        precise=compound.getBoolean("precise");
+        if(compound.contains("precise", 99))
+            precise=compound.getBoolean("precise");
         if (!precise) {
             randomtargetoffest = new Vector3f();
         }
