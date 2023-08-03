@@ -39,10 +39,6 @@ public class LineEntity extends Entity implements TraceableEntity {
         return t1;
     }
 
-    public Vec3 conv(Vector3f axis) {
-        return new Vec3(axis.x, axis.y, axis.z);
-    }
-
     public Vector3f randomtarget(Vec3 axis) {
         var a = axis.toVector3f();
         a.mul((float) this.random.nextGaussian() * 0.3f + 1f);
@@ -145,7 +141,7 @@ public class LineEntity extends Entity implements TraceableEntity {
                 ent -> !(ent instanceof CubeEntity) && ent.getBoundingBox().clip(v1, v2).isPresent())
                 .forEach(x -> {
                     if (x.hurt(level().damageSources().indirectMagic(this, this.getOwner()),
-                            x.getHealth() / 7f))
+                            7f))
                         doEnchantDamageEffects(getOwner() instanceof LivingEntity l ? l : null, x);
                 });
         ;
@@ -238,7 +234,7 @@ public class LineEntity extends Entity implements TraceableEntity {
                 .ifPresent(tag -> compound.put("axis", tag));
         Vec3.CODEC.encodeStart(NbtOps.INSTANCE, getTarget()).result()
                 .ifPresent(tag -> compound.put("target", tag));
-        Vec3.CODEC.encodeStart(NbtOps.INSTANCE, conv(randomtargetoffest)).result()
+        Vec3.CODEC.encodeStart(NbtOps.INSTANCE, new Vec3(randomtargetoffest)).result()
                 .ifPresent(tag -> compound.put("offset", tag));
         compound.putInt("mv1", getMvprogress1());
         compound.putInt("mv2", getMvprogress2());
