@@ -26,18 +26,17 @@ public class LineEntity extends Entity implements TraceableEntity {
         super(entityType, level);
     }
 
-    public static LineEntity create_line(Level level, Vec3 axis, boolean b) {
-        var t =new LineEntity(((EntityGetter)(EntityType.ALLAY)).LINE(), level);
-        t.axis=axis;
-        t.precise=b;
-        t.readAdditionalSaveData(new CompoundTag());
-        level.addFreshEntity(t);
-        return t;
-    }
-
-
-    public Vector3f conv(Vec3 axis) {
-        return new Vector3f((float) axis.x, (float) axis.y, (float) axis.z);
+    public static LineEntity create_line(Entity owner, Vec3 axis, boolean b,Vec3 c) {
+        axis=new Vec3(axis.x,axis.y,axis.z);
+        Level level = owner.level();
+        var t1 =new LineEntity(((EntityGetter)(EntityType.ALLAY)).LINE(), level);
+        t1.axis=axis;
+        t1.precise=b;
+        t1.readAdditionalSaveData(new CompoundTag());
+        t1.setPos(c);
+        t1.owneruuid = Optional.ofNullable(owner.getUUID());
+        level.addFreshEntity(t1);
+        return t1;
     }
 
     public Vec3 conv(Vector3f axis) {
@@ -45,7 +44,7 @@ public class LineEntity extends Entity implements TraceableEntity {
     }
 
     public Vector3f randomtarget(Vec3 axis) {
-        var a = conv(axis);
+        var a = axis.toVector3f();
         a.mul((float) this.random.nextGaussian() * 0.3f + 1f);
         return a;
     }
@@ -94,7 +93,7 @@ public class LineEntity extends Entity implements TraceableEntity {
     }
 
     public void setTarget(Vec3 first) {
-        setTarget(conv(first));
+        setTarget(first.toVector3f());
     }
 
     public double getSp() {
@@ -210,7 +209,7 @@ public class LineEntity extends Entity implements TraceableEntity {
         }
         if (compound.contains("target") && compound.contains("offset")) {
             setTarget(Vec3.CODEC.decode(NbtOps.INSTANCE, compound.get("target")).result().get().getFirst());
-            randomtargetoffest = conv(Vec3.CODEC.decode(NbtOps.INSTANCE, compound.get("offset")).result().get().getFirst());
+            randomtargetoffest = Vec3.CODEC.decode(NbtOps.INSTANCE, compound.get("offset")).result().get().getFirst().toVector3f();
         } else {
             Vector3f randomtarget = randomtarget(axis);
             randomtargetoffest = randomtargetoffest(randomtarget);

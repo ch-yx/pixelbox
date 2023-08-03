@@ -10,6 +10,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
@@ -115,7 +116,7 @@ public class CubeEntity extends LivingEntity {
 
     public boolean iswinner;
     private long lifecachefortask;
-    private Object task;
+    private Task task;
 
     @Override
     protected void defineSynchedData() {
@@ -354,8 +355,89 @@ public class CubeEntity extends LivingEntity {
     }
 
     private void createtask() {
+        if (task == null) {
+            task=new Task(this);
+        }
+        updateprogress();
     }
 
+    class Task{
+
+        public final CubeEntity master;
+        private Vec3 core;
+        private int countdown;
+        private ArrayList<PixelEntity> member;
+
+        public Task(CubeEntity cubeEntity) {
+            this.master = cubeEntity;
+            this.core=master.enemy.map(x->x.position()).orElse(master.position()).add(0, 25, 0);
+            this.countdown=10*20;
+            this.member=new ArrayList<>();
+            this.master.getidlechildren().unordered().limit(150).peek(x->member.add(x))
+            .forEach(x->x.setgoing(0, 100, core.subtract(0, com.example.ExampleMod.pixsize/2, 0), countdown));
+        }
+
+        void tick(){
+            if (countdown>0) {
+                countdown--;
+                return;
+            }
+            this.master.task=null;
+            updateprogress();
+            if(this.master.iswinner)return;
+            if(this.master.enemy.isEmpty())return;
+            var l = member.stream().filter(x->x.getBoundingBox().contains(core)).limit(2).toList();
+            System.err.println("\n\n\n88888888888833333333333399+\n"+l.size()+"\n\n\n");
+            System.out.println(core);
+            for (PixelEntity iterable_element : member) {
+                System.out.println('v');
+                System.out.println(iterable_element.position());
+                System.out.println(iterable_element.goingdata.target);
+                System.out.println(iterable_element.state);
+                System.out.println('^');
+            }
+            if (master.getlife()>2 && l.size() >=2) {
+                for (PixelEntity ele : l) {
+                    ele.kill();
+                }
+                master.playSound(SoundEvents.LIGHTNING_BOLT_THUNDER);
+                var d =this.core.vectorTo(this.master.enemy.get().getBoundingBox().getCenter());
+                d.scale(4/d.length());
+                var v1=LineEntity.create_line(this.master, d, true , this.core);
+                v1.setMvprogress1(0);
+                v1.setMvprogress2(-10);
+
+                var v2=LineEntity.create_line(this.master, d, true , this.core);
+                v2.setMvprogress1(-10);
+                v2.setMvprogress2(-15);
+
+                var v3=LineEntity.create_line(this.master, d, true , this.core);
+                v3.setMvprogress1(-20);
+                v3.setMvprogress2(-27);
+
+                var v4=LineEntity.create_line(this.master, d, true , this.core);
+                v4.setMvprogress1(-40);
+                v4.setMvprogress2(-50);
+
+                var v5=LineEntity.create_line(this.master, d, false , this.core);
+                v5.setMvprogress1(-7);
+                v5.setMvprogress2(-30);
+
+                var v6=LineEntity.create_line(this.master, d, false , this.core);
+                v6.setMvprogress1(-13);
+                v6.setMvprogress2(-20);
+
+                var v7=LineEntity.create_line(this.master, d, false , this.core);
+                v7.setMvprogress1(-60);
+                v7.setMvprogress2(-70);
+
+                var v8=LineEntity.create_line(this.master, d, false , this.core);
+                v8.setMvprogress1(-25);
+                v8.setMvprogress2(-30);
+            }
+            
+        }
+    }
     Stream<PixelEntity> getidlechildren() {
         return getlivechildren().filter(x -> (x.state == State.IDLE));
     }
@@ -462,10 +544,15 @@ public class CubeEntity extends LivingEntity {
 
     public void updateprogress() {
         this.bossbar.setProgress(this.getlife() / (float) this.children.length);
-        if (this.getlife() < this.children.length / 4) {
-            bossbar.setName(net.minecraft.network.chat.Component.empty().append(this.getDisplayName())
-                    .append(":  " + getlife() + "/" + children.length));
+        var std = net.minecraft.network.chat.Component.empty();
+        if (this.task!=null) {
+            std.append("⚠⚠⚠");
         }
+        std.append(this.getDisplayName());
+        if (this.getlife() < this.children.length / 4) {
+            std.append(":  " + getlife() + "/" + children.length);
+        }
+        bossbar.setName(std);
         
     }
 
