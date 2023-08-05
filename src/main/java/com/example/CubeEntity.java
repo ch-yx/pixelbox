@@ -368,12 +368,15 @@ public class CubeEntity extends LivingEntity {
         private int countdown;
         private ArrayList<PixelEntity> member;
 
+        final static int const1=50;
+        static final int const2=10;
+
         public Task(CubeEntity cubeEntity) {
             this.master = cubeEntity;
             this.core=master.enemy.map(x->x.position()).orElse(master.position()).add(0, 25, 0);
             this.countdown=10*20;
             this.member=new ArrayList<>();
-            this.master.getidlechildren().unordered().limit(150).peek(x->member.add(x))
+            this.master.getidlechildren().unordered().limit(const1).peek(x->member.add(x))
             .forEach(x->x.setgoing(0, 100, core.subtract(0, com.example.ExampleMod.pixsize/2, 0), countdown));
         }
 
@@ -386,7 +389,7 @@ public class CubeEntity extends LivingEntity {
             updateprogress();
             if(this.master.iswinner)return;
             if(this.master.enemy.isEmpty())return;
-            var l = member.stream().filter(x->x.getBoundingBox().contains(core)).limit(2).toList();
+            var l = this.master.getlivechildren().filter(x->x.getBoundingBox().contains(core)).limit(const2).toList();
             System.err.println("\n\n\n88888888888833333333333399+\n"+l.size()+"\n\n\n");
             System.out.println(core);
             for (PixelEntity iterable_element : member) {
@@ -396,7 +399,7 @@ public class CubeEntity extends LivingEntity {
                 System.out.println(iterable_element.state);
                 System.out.println('^');
             }
-            if (master.getlife()>2 && l.size() >=2) {
+            if (master.getlife()>const2 && l.size() >=const2) {
                 for (PixelEntity ele : l) {
                     ele.kill();
                 }
@@ -434,6 +437,8 @@ public class CubeEntity extends LivingEntity {
                 var v8=LineEntity.create_line(this.master, d, false , this.core);
                 v8.setMvprogress1(-25);
                 v8.setMvprogress2(-30);
+            }else if(master.getlife()>const2*1.5){
+                master.createtask();
             }
             
         }
