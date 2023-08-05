@@ -100,7 +100,8 @@ public class CubeEntity extends LivingEntity {
             }
         }
         compoundTag.put("children", list);
-
+        if(this.task!=null)
+            compoundTag.put("task",this.task.to_compound());
     }
 
     public Optional<Entity> enemy;
@@ -161,6 +162,9 @@ public class CubeEntity extends LivingEntity {
             this.splist = compoundTag.getList("children", 10);
         }
         // onaddtolevel(level());
+        if(compoundTag.contains("task")){
+            this.task=new Task(this, compoundTag);
+        }
     }
 
     double rtri(double a, double b) {
@@ -450,6 +454,19 @@ public class CubeEntity extends LivingEntity {
                 master.createtask();
             }
             
+        }
+        Task (CubeEntity master, CompoundTag input){
+            countdown=input.getInt("countdown");
+            core =new Vec3(input.getDouble("corex"),input.getDouble("corey"),input.getDouble("corez"));
+            this.master=master;
+        }
+        CompoundTag to_compound(){
+            CompoundTag foo = new CompoundTag();
+            foo.putInt("countdown", countdown);
+            foo.putDouble("corex", core.x());
+            foo.putDouble("corey", core.y());
+            foo.putDouble("corez", core.z());
+            return foo;
         }
     }
     Stream<PixelEntity> getidlechildren() {
