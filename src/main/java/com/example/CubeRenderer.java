@@ -93,6 +93,15 @@ public class CubeRenderer<T extends Entity>
     @Override
     public void render(T entity, float f, float g, PoseStack poseStack, MultiBufferSource multiBufferSource,
             int i) {
+        // var task =(((CubeEntity) entity).task);
+        // if (task != null) {
+        //     task.core.subtract(entity.position());
+        //     var czm = multiBufferSource.getBuffer(RenderType.debugQuads());
+        //     PixRenderer.drawBoxFaces(poseStack.last().pose(), czm, -0.5f, -0.5f,
+        //         -0.5f,
+        //         0.5f, 0.5f,
+        //         0.5f, 1, 1, 0, 0.8f);
+        // }
         poseStack.pushPose();
         poseStack.translate(-entity.getX(), (com.example.ExampleMod.pixsize / 2) - entity.getY(), -entity.getZ());
 

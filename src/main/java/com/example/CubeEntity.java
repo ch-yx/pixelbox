@@ -118,7 +118,7 @@ public class CubeEntity extends LivingEntity {
 
     public boolean iswinner;
     private long lifecachefortask;
-    private Task task;
+    public Task task;
 
     @Override
     protected void defineSynchedData() {
@@ -369,8 +369,8 @@ public class CubeEntity extends LivingEntity {
     class Task{
 
         public final CubeEntity master;
-        private Vec3 core;
-        private int countdown;
+        public Vec3 core;
+        public int countdown;
         private ArrayList<PixelEntity> member;
 
         final static int const1=50;
@@ -456,6 +456,7 @@ public class CubeEntity extends LivingEntity {
             
         }
         Task (CubeEntity master, CompoundTag input){
+            this.member=new ArrayList<>();
             countdown=input.getInt("countdown");
             core =new Vec3(input.getDouble("corex"),input.getDouble("corey"),input.getDouble("corez"));
             this.master=master;
