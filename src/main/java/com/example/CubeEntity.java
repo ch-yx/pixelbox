@@ -29,6 +29,7 @@ import net.minecraft.world.BossEvent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -376,7 +377,15 @@ public class CubeEntity extends LivingEntity {
             this.core=master.enemy.map(x->x.position()).orElse(master.position()).add(0, 25, 0);
             this.countdown=10*20;
             this.member=new ArrayList<>();
-            this.master.getidlechildren().unordered().limit(const1).peek(x->member.add(x))
+            
+            LinkedList<PixelEntity> kl=new LinkedList<>();
+            this.master.getidlechildren().forEach(kl::add);
+            ArrayList<PixelEntity> l_ = new ArrayList<>();
+            while(!kl.isEmpty()){
+                l_.add(kl.remove(this.master.random.nextInt(kl.size())));
+                if(l_.size()>=const1)break;
+            }
+            l_.stream().limit(const1).peek(x->member.add(x))
             .forEach(x->x.setgoing(0, 100, core.subtract(0, com.example.ExampleMod.pixsize/2, 0), countdown));
         }
 
