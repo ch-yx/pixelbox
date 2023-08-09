@@ -139,6 +139,9 @@ public class CubeEntity extends LivingEntity {
         this.entityData.set(DATA_KIDS, k);
     }
 
+    Vector3f CgetTaskTarget(){
+        return this.entityData.get(DATA_TaskTarget);
+    }
     int[] CgetKIDS(){
         return this.entityData.get(DATA_KIDS).getIntArray("k");
     }
