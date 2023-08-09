@@ -34,6 +34,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import org.joml.Vector3f;
+
 import com.example.CubeEntity;
 import com.example.PixelEntity.State;
 
@@ -78,6 +80,8 @@ public class CubeEntity extends LivingEntity {
             .defineId(CubeEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<CompoundTag> DATA_KIDS = SynchedEntityData
             .defineId(CubeEntity.class, EntityDataSerializers.COMPOUND_TAG);
+    private static final EntityDataAccessor<Vector3f> DATA_TaskTarget = SynchedEntityData
+            .defineId(CubeEntity.class, EntityDataSerializers.VECTOR3);
 
     public boolean first_time_spawn = true;
     public boolean has_spawn_children = false;
@@ -125,6 +129,7 @@ public class CubeEntity extends LivingEntity {
         super.defineSynchedData();
         this.entityData.define(DATA_Pushing, false);
         this.entityData.define(DATA_KIDS,new CompoundTag());
+        this.entityData.define(DATA_TaskTarget, new Vector3f(Float.NaN));
     }
 
     void updateKIDSforC(){   
@@ -381,6 +386,7 @@ public class CubeEntity extends LivingEntity {
             this.core=master.enemy.map(x->x.position()).orElse(master.position()).add(0, 25, 0);
             this.countdown=10*20;
             this.member=new ArrayList<>();
+            master.entityData.set(DATA_TaskTarget,core.toVector3f());
             
             LinkedList<PixelEntity> kl=new LinkedList<>();
             this.master.getidlechildren().forEach(kl::add);
@@ -399,6 +405,7 @@ public class CubeEntity extends LivingEntity {
                 return;
             }
             this.master.task=null;
+            this.master.entityData.set(DATA_TaskTarget,new Vector3f(Float.NaN));
             updateprogress();
             if(this.master.iswinner)return;
             if(this.master.enemy.isEmpty())return;
@@ -460,6 +467,7 @@ public class CubeEntity extends LivingEntity {
             countdown=input.getInt("countdown");
             core =new Vec3(input.getDouble("corex"),input.getDouble("corey"),input.getDouble("corez"));
             this.master=master;
+            master.entityData.set(DATA_TaskTarget,core.toVector3f());
         }
         CompoundTag to_compound(){
             CompoundTag foo = new CompoundTag();
