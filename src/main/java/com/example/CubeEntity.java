@@ -373,7 +373,7 @@ public class CubeEntity extends LivingEntity {
         public int countdown;
         private ArrayList<PixelEntity> member;
 
-        final static int const1=50;
+        final static int const1=20;
         static final int const2=10;
 
         public Task(CubeEntity cubeEntity) {
@@ -390,7 +390,7 @@ public class CubeEntity extends LivingEntity {
                 if(l_.size()>=const1)break;
             }
             l_.stream().limit(const1).peek(x->member.add(x))
-            .forEach(x->x.setgoing(0, 100, core.subtract(0, com.example.ExampleMod.pixsize/2, 0), countdown));
+            .forEach(x->{x.setgoing(0, 100, core.subtract(0, com.example.ExampleMod.pixsize/2, 0), countdown);x.state=State.GOING_with_TASK;});
         }
 
         void tick(){
@@ -418,7 +418,7 @@ public class CubeEntity extends LivingEntity {
                 }
                 master.playSound(SoundEvents.LIGHTNING_BOLT_THUNDER);
                 var d =this.core.vectorTo(this.master.enemy.get().getBoundingBox().getCenter());
-                d.scale(4/d.length());
+                d=d.scale(4/d.length());
                 var v1=LineEntity.create_line(this.master, d, true , this.core);
                 v1.setMvprogress1(0);
                 v1.setMvprogress2(-10);

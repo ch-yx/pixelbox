@@ -151,7 +151,7 @@ public class LineEntity extends Entity implements TraceableEntity {
     }
 
     LineEntity createnext() {
-        if (age > 7) {
+        if (age > 15) {
             return null;
         }
         var slave = new LineEntity(getType(), level());

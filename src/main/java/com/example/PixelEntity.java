@@ -318,7 +318,7 @@ public class PixelEntity extends Entity {
     }
 
     enum State {
-        sleeping, IDLE, GOING, ERROR, connecting;
+        sleeping, IDLE, GOING, ERROR, connecting, GOING_with_TASK;
     }
 
     public State state = State.sleeping;
@@ -389,7 +389,7 @@ public class PixelEntity extends Entity {
     void loctick() {
 
         switch (state) {
-            case GOING:
+            case GOING,GOING_with_TASK:
                 switch (random.nextInt(16)) {
                     case 3:
                         setpixelcolor(0, 255, 0);
