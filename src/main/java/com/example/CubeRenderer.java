@@ -93,15 +93,25 @@ public class CubeRenderer<T extends Entity>
     @Override
     public void render(T entity, float f, float g, PoseStack poseStack, MultiBufferSource multiBufferSource,
             int i) {
-        // var task =(((CubeEntity) entity).task);
-        // if (task != null) {
-        //     task.core.subtract(entity.position());
-        //     var czm = multiBufferSource.getBuffer(RenderType.debugQuads());
-        //     PixRenderer.drawBoxFaces(poseStack.last().pose(), czm, -0.5f, -0.5f,
-        //         -0.5f,
-        //         0.5f, 0.5f,
-        //         0.5f, 1, 1, 0, 0.8f);
-        // }
+
+        poseStack.pushPose();
+
+        var task =((CubeEntity) entity).CgetTaskTarget();
+        poseStack.translate(task.x()-entity.getX(), task.y()- entity.getY(), task.z()-entity.getZ());
+            
+            var czm = multiBufferSource.getBuffer(RenderType.debugQuads());
+            drawRing(poseStack.last().pose(), czm, 1, 0, 0, 0.8f);
+            poseStack.pushPose();
+            poseStack.mulPoseMatrix(new Matrix4f(0,1,0,0,-1,0,0,0,0,0,1,0,0,0,0,1));
+            drawRing(poseStack.last().pose(), czm, 0, 1, 0, 0.8f);
+            poseStack.popPose();
+            poseStack.pushPose();
+            poseStack.mulPoseMatrix(new Matrix4f(0,0,1,0 ,0,1,0,0, -1,0,0,0, 0,0,0,1));
+            drawRing(poseStack.last().pose(), czm, 0, 0, 1, 0.8f);
+            poseStack.popPose();
+        poseStack.popPose();
+
+
         poseStack.pushPose();
         poseStack.translate(-entity.getX(), (com.example.ExampleMod.pixsize / 2) - entity.getY(), -entity.getZ());
 
@@ -121,6 +131,23 @@ public class CubeRenderer<T extends Entity>
         }
         poseStack.popPose();
         lks.forEach(Slink::action);
+    }
+    void drawRing(Matrix4f mat, VertexConsumer builder,
+    float red1, float grn1, float blu1, float alpha){
+        int i = 0;
+        var s = 0f;
+        var c = 1f;
+        for (; i < 36; ) {
+            
+            builder.vertex(mat, -0.1f, s, c).color(red1, grn1, blu1, alpha).endVertex();
+            builder.vertex(mat, 0.1f, s, c).color(red1, grn1, blu1, alpha).endVertex();
+            i++;
+            s = Mth.sin(2*(float)Math.PI/36*i);
+            c = Mth.cos(2*(float)Math.PI/36*i);
+            builder.vertex(mat, 0.1f, s, c).color(red1, grn1, blu1, alpha).endVertex();
+            builder.vertex(mat, -0.1f, s, c).color(red1, grn1, blu1, alpha).endVertex();
+        }
+        
     }
 
     public void renderP(PixelEntity childentity, float f, float g, PoseStack poseStack,
