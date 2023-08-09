@@ -252,6 +252,11 @@ public class CubeEntity extends LivingEntity {
                 p.setgoing(0, 20, defaultposVec3(p.index).add(this.position()), 0, State.sleeping);
             });
         }
+        if (task != null) {    
+            entityData.set(DATA_TaskTarget,task.core.subtract(position()).toVector3f());
+        }else{
+            entityData.set(DATA_TaskTarget,new Vector3f(Float.NaN));
+        }
         if ((getId() - tickCount) % 300 == 0) {
             this.enemy.ifPresent(player -> {
                 var t_ = player.position().add(0, player.getBbHeight() / 2, 0).scale(2).subtract(position())
@@ -389,7 +394,7 @@ public class CubeEntity extends LivingEntity {
             this.core=master.enemy.map(x->x.position()).orElse(master.position()).add(0, 25, 0);
             this.countdown=10*20;
             this.member=new ArrayList<>();
-            master.entityData.set(DATA_TaskTarget,core.toVector3f());
+
             
             LinkedList<PixelEntity> kl=new LinkedList<>();
             this.master.getidlechildren().forEach(kl::add);
@@ -408,7 +413,7 @@ public class CubeEntity extends LivingEntity {
                 return;
             }
             this.master.task=null;
-            this.master.entityData.set(DATA_TaskTarget,new Vector3f(Float.NaN));
+
             updateprogress();
             if(this.master.iswinner)return;
             if(this.master.enemy.isEmpty())return;
@@ -470,7 +475,7 @@ public class CubeEntity extends LivingEntity {
             countdown=input.getInt("countdown");
             core =new Vec3(input.getDouble("corex"),input.getDouble("corey"),input.getDouble("corez"));
             this.master=master;
-            master.entityData.set(DATA_TaskTarget,core.toVector3f());
+
         }
         CompoundTag to_compound(){
             CompoundTag foo = new CompoundTag();

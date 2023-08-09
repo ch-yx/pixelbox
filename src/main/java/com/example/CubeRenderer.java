@@ -97,7 +97,7 @@ public class CubeRenderer<T extends Entity>
         poseStack.pushPose();
 
         var task =((CubeEntity) entity).CgetTaskTarget();
-        poseStack.translate(task.x()-entity.getX(), task.y()- entity.getY(), task.z()-entity.getZ());
+        poseStack.translate(task.x,task.y,task.z);
             
             var czm = multiBufferSource.getBuffer(RenderType.debugQuads());
             drawRing(poseStack.last().pose(), czm, 1, 0, 0, 0.8f);
