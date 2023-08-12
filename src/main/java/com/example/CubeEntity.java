@@ -225,8 +225,8 @@ public class CubeEntity extends LivingEntity {
         }
         this.level().players().forEach(player -> {
             ((ServerPlayer) player).connection.send(getAddEntityPacket());
-            if(children!=null)updateKIDSforC();
         });
+        if(children!=null)updateKIDSforC();
     }
 
     @Override

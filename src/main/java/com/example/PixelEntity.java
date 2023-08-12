@@ -245,7 +245,7 @@ public class PixelEntity extends Entity {
         if (this.getOwner() == null) {
             return false;
         }
-
+if(level().isClientSide()){return false;}
         if (damageSource.isIndirect() && damageSource.getEntity() != null && damageSource.getEntity() != getOwner()) {
             if (this.getOwner().iswinner || (this.getOwner().enemy.isEmpty() && !this.getOwner().allchildrenliving())) {
                 if (!getOwner().isRemoved()) {
